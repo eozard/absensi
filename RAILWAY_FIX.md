@@ -3,6 +3,7 @@
 ## Problem
 
 Error saat deploy ke Railway:
+
 ```
 Error: /app/node_modules/bcrypt/lib/binding/napi-v3/bcrypt_lib.node: invalid ELF header
 code: 'ERR_DLOPEN_FAILED'
@@ -27,6 +28,7 @@ npm install bcryptjs
 ### 2. Update Import Statements
 
 Replace di semua files:
+
 ```javascript
 // Before
 import bcrypt from "bcrypt";
@@ -38,6 +40,7 @@ import bcryptjs from "bcryptjs";
 ### 3. API tetap sama, tidak perlu ubah code
 
 bcryptjs punya API yang sama dengan bcrypt:
+
 ```javascript
 // Hash password
 const hashedPassword = await bcrypt.hash(password, 10);
@@ -68,17 +71,18 @@ Railway akan auto-redeploy dan error hilang!
 
 ## Why bcryptjs?
 
-| bcrypt | bcryptjs |
-|--------|----------|
-| Native C++ module | Pure JavaScript |
-| Needs compilation | No compilation |
-| Platform-specific | Cross-platform |
-| Faster | Slightly slower (acceptable) |
-| ❌ Deployment issues | ✅ No issues |
+| bcrypt               | bcryptjs                     |
+| -------------------- | ---------------------------- |
+| Native C++ module    | Pure JavaScript              |
+| Needs compilation    | No compilation               |
+| Platform-specific    | Cross-platform               |
+| Faster               | Slightly slower (acceptable) |
+| ❌ Deployment issues | ✅ No issues                 |
 
 ## Performance Impact
 
 bcryptjs sekitar 30% lebih lambat dari bcrypt, tapi:
+
 - Hashing password jarang dilakukan (hanya saat register/login)
 - Perbedaan ~10ms per hash (tidak terasa)
 - Reliability > Speed untuk deployment
@@ -86,12 +90,14 @@ bcryptjs sekitar 30% lebih lambat dari bcrypt, tapi:
 ## Alternative Solutions (NOT RECOMMENDED)
 
 ### Option 1: Add .npmrc (complex)
+
 ```
 # .npmrc
 node-linker=hoisted
 ```
 
 ### Option 2: Platform-specific build (complex)
+
 ```json
 {
   "scripts": {
@@ -101,6 +107,7 @@ node-linker=hoisted
 ```
 
 ### Option 3: Docker (overkill)
+
 Build di Docker container dengan Linux.
 
 ❌ Semua ini lebih ribet daripada pakai bcryptjs!
@@ -110,11 +117,13 @@ Build di Docker container dengan Linux.
 Setelah fix, test:
 
 1. **Local:**
+
 ```bash
 cd server && npm install && node server.js
 ```
 
 2. **Login test:**
+
 ```bash
 curl -X POST http://localhost:5000/api/login \
   -H "Content-Type: application/json" \
