@@ -1,5 +1,5 @@
 import { supabase } from "../config/supabase.js";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
 
 dotenv.config();
