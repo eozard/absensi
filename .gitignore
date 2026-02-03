@@ -1,20 +1,37 @@
 # Node
 node_modules/
+client/node_modules/
+server/node_modules/
 
 # Vite / build
-frontend/dist/
-backend/dist/
+client/dist/
+server/dist/
+dist/
 
 # Env
 .env
-backend/.env
-frontend/.env
+.env.local
+.env.*.local
+client/.env
+server/.env
 
 # Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
 # OS
 .DS_Store
 Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build
+build/
+out/

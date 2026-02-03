@@ -22,12 +22,179 @@ Sistem absensi berbasis web untuk mengelola kehadiran mahasiswa dan anak SMK dal
 ## 📁 Struktur Project
 
 ```
-absensi-pkl-supabase/
-├── backend/
+absensi-pkl-supabase/          # Root project
+├── server/                     # Backend API (Express.js)
 │   ├── config/
 │   │   └── supabase.js
 │   ├── middleware/
 │   │   ├── auth.js
+│   │   └── wifiKampus.js
+│   ├── routes/
+│   │   ├── auth.js
+│   │   └── admin.js
+│   ├── scripts/
+│   │   ├── seedDatabase.js
+│   │   ├── createAdminUser.js
+│   │   └── ...
+│   ├── server.js               # Entry point
+│   └── package.json
+│
+├── client/                      # Frontend React (Vite)
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── utils/
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   ├── public/
+│   ├── vite.config.js
+│   ├── tailwind.config.js
+│   └── package.json
+│
+├── .env                        # Environment variables
+├── package.json                # Root scripts
+└── README.md
+```
+
+## 🚀 Quick Start
+
+### 1. Setup Environment
+
+```bash
+# Copy env example
+cp .env.example .env
+
+# Edit .env dengan credentials Supabase Anda
+```
+
+### 2. Install Dependencies
+
+```bash
+# Install semua dependencies (root, server, client)
+npm install
+
+# Jika ingin install separate:
+npm install                    # Install root
+cd server && npm install      # Install server
+cd client && npm install      # Install client
+```
+
+### 3. Jalankan Project
+
+#### Option A: Development Mode (Separated)
+
+**Terminal 1 - Backend:**
+```bash
+cd server
+npm run dev
+# Server runs on http://localhost:5000
+```
+
+**Terminal 2 - Frontend:**
+```bash
+cd client
+npm run dev
+# Frontend runs on http://localhost:5173 (with API proxy to :5000)
+```
+
+#### Option B: Production Mode (Unified)
+
+```bash
+# Build frontend
+cd client && npm run build && cd ..
+
+# Run backend (serves frontend)
+cd server && npm run dev
+# Access on http://localhost:5000
+```
+
+### 4. Database Setup
+
+```bash
+# Seed dummy data
+npm run seed
+
+# Create admin user
+npm run create-admin
+
+# List all users
+npm run list-users
+```
+
+## 📝 Available Scripts
+
+### Root Scripts
+```bash
+npm run dev              # Run backend server
+npm run dev:frontend    # Run frontend dev server
+npm run build:frontend  # Build frontend
+npm run preview:frontend # Preview frontend build
+npm run seed            # Seed database with dummy data
+npm run create-admin    # Create admin account
+npm run list-users      # List all users
+```
+
+### Server Scripts
+```bash
+cd server
+npm run dev                    # Start server
+npm run seed                   # Seed database
+npm run create-admin           # Create admin
+npm run list-users             # List users
+node test-comprehensive.js    # Run comprehensive tests
+```
+
+### Client Scripts
+```bash
+cd client
+npm run dev        # Start dev server
+npm run build      # Build for production
+npm run preview    # Preview production build
+```
+
+## 🔐 Authentication
+
+### Login
+```bash
+POST /api/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password",
+  "fingerprint": "device-fingerprint-hash"
+}
+```
+
+### Device Binding
+- Max 2 devices per user
+- Automatic fingerprint-based binding
+- Remove device dari dashboard
+
+## 📊 API Endpoints
+
+### Authentication
+- `POST /api/login` - Login
+
+### Mahasiswa
+- `POST /api/absen` - Record attendance
+- `GET /api/riwayat` - Get attendance history
+- `POST /api/izin` - Submit permit request
+- `GET /api/izin` - Get permits
+- `DELETE /api/izin/:id` - Cancel permit
+
+### Admin
+- `GET /api/admin/stats` - Dashboard stats
+- `GET /api/admin/students` - List students
+- `GET /api/admin/attendance/:nama` - Student attendance
+- `GET /api/admin/devices` - List devices
+- `DELETE /api/admin/devices/:deviceId` - Remove device
+- `GET /api/admin/users` - List users
+- `POST /api/admin/users` - Create user
+- `GET /api/admin/izin` - All permits
+- `PUT /api/admin/izin/:id` - Update permit status
+
+## 📋 Struktur Project
 │   │   └── wifiKampus.js
 │   ├── routes/
 │   │   ├── auth.js
