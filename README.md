@@ -84,6 +84,7 @@ cd client && npm install      # Install client
 #### Option A: Development Mode (Separated)
 
 **Terminal 1 - Backend:**
+
 ```bash
 cd server
 npm run dev
@@ -91,6 +92,7 @@ npm run dev
 ```
 
 **Terminal 2 - Frontend:**
+
 ```bash
 cd client
 npm run dev
@@ -124,6 +126,7 @@ npm run list-users
 ## 📝 Available Scripts
 
 ### Root Scripts
+
 ```bash
 npm run dev              # Run backend server
 npm run dev:frontend    # Run frontend dev server
@@ -135,6 +138,7 @@ npm run list-users      # List all users
 ```
 
 ### Server Scripts
+
 ```bash
 cd server
 npm run dev                    # Start server
@@ -145,6 +149,7 @@ node test-comprehensive.js    # Run comprehensive tests
 ```
 
 ### Client Scripts
+
 ```bash
 cd client
 npm run dev        # Start dev server
@@ -155,6 +160,7 @@ npm run preview    # Preview production build
 ## 🔐 Authentication
 
 ### Login
+
 ```bash
 POST /api/login
 Content-Type: application/json
@@ -167,6 +173,7 @@ Content-Type: application/json
 ```
 
 ### Device Binding
+
 - Max 2 devices per user
 - Automatic fingerprint-based binding
 - Remove device dari dashboard
@@ -174,9 +181,11 @@ Content-Type: application/json
 ## 📊 API Endpoints
 
 ### Authentication
+
 - `POST /api/login` - Login
 
 ### Mahasiswa
+
 - `POST /api/absen` - Record attendance
 - `GET /api/riwayat` - Get attendance history
 - `POST /api/izin` - Submit permit request
@@ -184,6 +193,7 @@ Content-Type: application/json
 - `DELETE /api/izin/:id` - Cancel permit
 
 ### Admin
+
 - `GET /api/admin/stats` - Dashboard stats
 - `GET /api/admin/students` - List students
 - `GET /api/admin/attendance/:nama` - Student attendance
@@ -195,43 +205,45 @@ Content-Type: application/json
 - `PUT /api/admin/izin/:id` - Update permit status
 
 ## 📋 Struktur Project
-│   │   └── wifiKampus.js
-│   ├── routes/
-│   │   ├── auth.js
-│   │   └── admin.js
-│   ├── scripts/
-│   │   ├── seedDatabase.js
-│   │   ├── createAdminUser.js
-│   │   └── listAllUsers.js
-│   ├── .env
-│   ├── .env.example
-│   ├── server.js
-│   └── package.json
+
+│ │ └── wifiKampus.js
+│ ├── routes/
+│ │ ├── auth.js
+│ │ └── admin.js
+│ ├── scripts/
+│ │ ├── seedDatabase.js
+│ │ ├── createAdminUser.js
+│ │ └── listAllUsers.js
+│ ├── .env
+│ ├── .env.example
+│ ├── server.js
+│ └── package.json
 │
 ├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   │   └── ProtectedRoute.jsx
-│   │   ├── pages/
-│   │   │   ├── LoginPage.jsx
-│   │   │   ├── MahasiswaDashboard.jsx
-│   │   │   └── AdminDashboard.jsx
-│   │   ├── utils/
-│   │   │   ├── axios.js
-│   │   │   └── fingerprint.js
-│   │   ├── App.jsx
-│   │   ├── main.jsx
-│   │   └── index.css
-│   ├── index.html
-│   ├── vite.config.js
-│   ├── tailwind.config.js
-│   ├── postcss.config.js
-│   ├── .env
-│   └── package.json
+│ ├── src/
+│ │ ├── components/
+│ │ │ └── ProtectedRoute.jsx
+│ │ ├── pages/
+│ │ │ ├── LoginPage.jsx
+│ │ │ ├── MahasiswaDashboard.jsx
+│ │ │ └── AdminDashboard.jsx
+│ │ ├── utils/
+│ │ │ ├── axios.js
+│ │ │ └── fingerprint.js
+│ │ ├── App.jsx
+│ │ ├── main.jsx
+│ │ └── index.css
+│ ├── index.html
+│ ├── vite.config.js
+│ ├── tailwind.config.js
+│ ├── postcss.config.js
+│ ├── .env
+│ └── package.json
 │
 ├── database.sql
 └── README.md
-```
+
+````
 
 ## 🚀 Quick Start
 
@@ -253,7 +265,7 @@ Content-Type: application/json
 ```bash
 cd backend
 npm install
-```
+````
 
 **Buat file `.env`:**
 

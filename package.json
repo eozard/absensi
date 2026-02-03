@@ -5,6 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "node server/server.js",
+    "start": "node server/server.js",
+    "build": "cd client && npm install && npm run build",
+    "postinstall": "cd server && npm install && cd ../client && npm install",
     "dev:frontend": "cd client && vite",
     "build:frontend": "cd client && vite build",
     "preview:frontend": "cd client && vite preview",
@@ -12,7 +15,15 @@
     "create-admin": "node server/scripts/createAdminUser.js",
     "list-users": "node server/scripts/listAllUsers.js"
   },
-  "keywords": ["absensi", "pkl", "supabase"],
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "keywords": [
+    "absensi",
+    "pkl",
+    "supabase"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {

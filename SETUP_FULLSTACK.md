@@ -56,6 +56,7 @@ npm run list-users
 Jalankan dalam 2 terminal terpisah untuk hot-reload:
 
 **Terminal 1 - Backend:**
+
 ```bash
 cd server
 npm run dev
@@ -63,6 +64,7 @@ npm run dev
 ```
 
 **Terminal 2 - Frontend:**
+
 ```bash
 cd client
 npm run dev
@@ -99,6 +101,7 @@ npm run list-users      # List all users
 ### API Proxy (Development)
 
 File: `client/vite.config.js`
+
 ```javascript
 server: {
   proxy: {
@@ -113,6 +116,7 @@ server: {
 ### API URL (Frontend)
 
 File: `client/src/utils/axios.js`
+
 ```javascript
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 ```
@@ -120,6 +124,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 ### Static Files Serving
 
 File: `server/server.js`
+
 - Production: Serve dari `client/dist/`
 - Development: Fallback ke `client/public/`
 

@@ -97,14 +97,18 @@ app.put("/api/admin/izin/:id", verifyToken, isAdmin, updateIzinStatus);
 app.get("*", (req, res) => {
   res.sendFile(indexPath, (err) => {
     if (err) {
-      res.status(404).json({ success: false, message: "Route tidak ditemukan" });
+      res
+        .status(404)
+        .json({ success: false, message: "Route tidak ditemukan" });
     }
   });
 });
 
 // 404 handler (untuk API routes yang tidak cocok)
 app.use("/api/*", (req, res) => {
-  res.status(404).json({ success: false, message: "API route tidak ditemukan" });
+  res
+    .status(404)
+    .json({ success: false, message: "API route tidak ditemukan" });
 });
 
 // Error handler

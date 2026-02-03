@@ -15,12 +15,14 @@ absensi-pkl-supabase/
 ## 🚀 Jalan Cepat (3 Langkah)
 
 ### 1️⃣ Setup Environment
+
 ```bash
 cp .env.example .env
 # Edit .env dengan Supabase credentials Anda
 ```
 
 ### 2️⃣ Dependencies Sudah Install ✅
+
 ```bash
 # Semuanya sudah siap! Jika belum:
 npm install
@@ -30,6 +32,7 @@ cd server && npm install && cd ../client && npm install && cd ..
 ### 3️⃣ Jalankan
 
 **Dev Mode (dengan hot-reload):**
+
 ```bash
 # Terminal 1
 cd server && npm run dev      # Backend: http://localhost:5000
@@ -39,6 +42,7 @@ cd client && npm run dev      # Frontend: http://localhost:5173
 ```
 
 **Production Mode (single server):**
+
 ```bash
 cd client && npm run build    # Build frontend
 cd ../server && npm run dev   # Serve everything on http://localhost:5000
@@ -46,14 +50,14 @@ cd ../server && npm run dev   # Serve everything on http://localhost:5000
 
 ## 📋 Commands
 
-| Command | Keterangan |
-|---------|-----------|
-| `npm run dev` | Run backend server |
-| `npm run dev:frontend` | Run frontend dev server |
+| Command                  | Keterangan                      |
+| ------------------------ | ------------------------------- |
+| `npm run dev`            | Run backend server              |
+| `npm run dev:frontend`   | Run frontend dev server         |
 | `npm run build:frontend` | Build frontend untuk production |
-| `npm run seed` | Seed dummy data ke database |
-| `npm run create-admin` | Create admin user |
-| `npm run list-users` | List semua users |
+| `npm run seed`           | Seed dummy data ke database     |
+| `npm run create-admin`   | Create admin user               |
+| `npm run list-users`     | List semua users                |
 
 ## ✅ Checklist
 
