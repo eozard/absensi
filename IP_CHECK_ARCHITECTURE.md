@@ -3,6 +3,7 @@
 ## ❌ Kenapa Tidak Bisa Cuma Supabase?
 
 Supabase adalah **database** saja, bukan server yang bisa:
+
 - ❌ Menjalankan custom logic
 - ❌ Check IP client
 - ❌ Validate request dari server side
@@ -33,20 +34,21 @@ Backend (Server)
 // server/server.js
 app.post("/api/login", (req, res) => {
   const clientIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-  
+
   // Check IP range 103.209.9.*
   if (!clientIP.startsWith('103.209.9')) {
-    return res.status(403).json({ 
-      error: "Hanya bisa absen dari WiFi Kampus" 
+    return res.status(403).json({
+      error: "Hanya bisa absen dari WiFi Kampus"
     });
   }
-  
+
   // Login berhasil
   res.json({ token: "..." });
 });
 ```
 
 **Biaya:** Hosting backend diperlukan
+
 - ✅ Railway: $5/bulan
 - ✅ Render: GRATIS (750 jam/bulan)
 - ✅ Fly.io: GRATIS (limited)
@@ -62,9 +64,9 @@ Supabase punya **Edge Functions** - ini adalah serverless backend!
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 serve(async (req) => {
-  const clientIP = req.headers.get('cf-connecting-ip') || 
+  const clientIP = req.headers.get('cf-connecting-ip') ||
                    req.headers.get('x-forwarded-for');
-  
+
   // Check WiFi campus
   if (!clientIP.startsWith('103.209.9')) {
     return new Response(
@@ -72,7 +74,7 @@ serve(async (req) => {
       { status: 403 }
     );
   }
-  
+
   return new Response(
     JSON.stringify({ success: true, ip: clientIP }),
     { status: 200 }
@@ -86,20 +88,21 @@ serve(async (req) => {
 
 ## 🎯 PERBANDINGAN
 
-| Aspek | Backend Tradisional | Supabase Functions |
-|-------|-------------------|-------------------|
-| **Setup** | Medium (butuh hosting) | Easy (langsung di Supabase) |
-| **Cost** | $0-5/bulan | FREE ✅ |
-| **Performance** | Good | Excellent (global CDN) |
-| **Maintenance** | Medium | Low |
-| **IP Checking** | ✅ Bisa | ✅ Bisa |
-| **Scalability** | Limited | Auto-scale |
+| Aspek           | Backend Tradisional    | Supabase Functions          |
+| --------------- | ---------------------- | --------------------------- |
+| **Setup**       | Medium (butuh hosting) | Easy (langsung di Supabase) |
+| **Cost**        | $0-5/bulan             | FREE ✅                     |
+| **Performance** | Good                   | Excellent (global CDN)      |
+| **Maintenance** | Medium                 | Low                         |
+| **IP Checking** | ✅ Bisa                | ✅ Bisa                     |
+| **Scalability** | Limited                | Auto-scale                  |
 
 ---
 
 ## 💡 REKOMENDASI
 
 ### **Jika sudah punya backend (current):**
+
 ```
 Pakai backend yang sudah ada
 - Render gratis 750 jam/bulan
@@ -108,6 +111,7 @@ Pakai backend yang sudah ada
 ```
 
 ### **Jika mau pure Supabase (tanpa backend terpisah):**
+
 ```
 Gunakan Supabase Edge Functions
 - IP check di: supabase/functions/check-ip
@@ -126,14 +130,14 @@ Backend Express.js Anda (server/server.js) sudah implement IP check:
 ```javascript
 // File: server/routes/auth.js (line ~100)
 
-const clientIP = req.headers['x-forwarded-for'] || 
+const clientIP = req.headers['x-forwarded-for'] ||
                  req.connection.remoteAddress;
 
 // Cek WiFi campus
 if (process.env.BYPASS_WIFI_CHECK !== 'true') {
   if (!isValidCampusIP(clientIP)) {
-    return res.status(403).json({ 
-      error: "Hanya bisa absen dari WiFi Kampus" 
+    return res.status(403).json({
+      error: "Hanya bisa absen dari WiFi Kampus"
     });
   }
 }
@@ -161,7 +165,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 serve(async (req) => {
   const clientIP = req.headers.get('cf-connecting-ip');
-  
+
   // Validasi IP
   const ipRange = '103.209.9'; // Campus WiFi
   if (!clientIP.startsWith(ipRange)) {
@@ -170,13 +174,13 @@ serve(async (req) => {
       { status: 403, headers: { 'Content-Type': 'application/json' } }
     );
   }
-  
+
   // Jika IP valid, create token
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL'),
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
   );
-  
+
   // Generate JWT atau lakukan login logic
   return new Response(
     JSON.stringify({ success: true, ip: clientIP }),
@@ -209,17 +213,18 @@ const response = await fetch(
 
 ## ⚡ KESIMPULAN
 
-| Situasi | Rekomendasi | Biaya |
-|---------|------------|-------|
-| **Sekarang (exist backend)** | Keep Express.js server | $0-5/mo |
-| **Mau pure Supabase** | Supabase Functions | FREE ✅ |
-| **Mau yang termudah** | Render backend + Vercel frontend | FREE ✅ |
+| Situasi                      | Rekomendasi                      | Biaya   |
+| ---------------------------- | -------------------------------- | ------- |
+| **Sekarang (exist backend)** | Keep Express.js server           | $0-5/mo |
+| **Mau pure Supabase**        | Supabase Functions               | FREE ✅ |
+| **Mau yang termudah**        | Render backend + Vercel frontend | FREE ✅ |
 
 ---
 
 ## 🎓 CATATAN PENTING
 
 **IP Check HARUS di server**, tidak bisa di:
+
 - ❌ Frontend (bisa di-fake)
 - ❌ Supabase database saja
 - ✅ Backend (Express, Supabase Functions, etc)
@@ -227,6 +232,7 @@ const response = await fetch(
 ---
 
 **TL;DR:**
+
 - **Current setup:** Backend Express.js Anda sudah OK!
 - **Hosting backend:** Render gratis, atau Railway $5/bulan
 - **Alternatif:** Supabase Functions (gratis, serverless)

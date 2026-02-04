@@ -17,6 +17,7 @@
 **Cara setup:**
 
 **Backend (Web Service):**
+
 ```bash
 1. https://render.com/auth/google (atau GitHub)
 2. Dashboard → New+ → Web Service
@@ -37,6 +38,7 @@
 ```
 
 **Frontend (Static Site):**
+
 ```bash
 1. New+ → Static Site
 2. Same repo (pkl4)
@@ -66,6 +68,7 @@
 ```
 
 **Setup:**
+
 ```bash
 1. https://vercel.com/login (GitHub)
 2. Add New Project → Import
@@ -96,6 +99,7 @@
 ```
 
 **Setup:**
+
 ```bash
 1. https://netlify.com (login GitHub)
 2. New site from Git
@@ -126,6 +130,7 @@
 ```
 
 **Untuk frontend:**
+
 ```bash
 1. Add ke package.json:
    "homepage": "https://farhan55.github.io/pkl4"
@@ -157,6 +162,7 @@
 ```
 
 **Setup:**
+
 ```bash
 1. https://fly.io (sign up)
 2. npm install -g flyctl
@@ -185,19 +191,20 @@
 
 ### **❌ YANG TIDAK BISA (GRATIS)**
 
-| Platform | Alasan |
-|----------|--------|
-| **Heroku** | Tutup free tier (Nov 2022) |
-| **AWS Free Tier** | Limited 1 tahun, perlu credit card |
-| **Google Cloud** | Limited free tier, perlu credit card |
-| **Azure** | Limited free tier, perlu credit card |
-| **DigitalOcean** | Minimum $5-6/bulan |
+| Platform          | Alasan                               |
+| ----------------- | ------------------------------------ |
+| **Heroku**        | Tutup free tier (Nov 2022)           |
+| **AWS Free Tier** | Limited 1 tahun, perlu credit card   |
+| **Google Cloud**  | Limited free tier, perlu credit card |
+| **Azure**         | Limited free tier, perlu credit card |
+| **DigitalOcean**  | Minimum $5-6/bulan                   |
 
 ---
 
 ## 🎯 KOMBINASI GRATIS TERBAIK
 
 ### **OPSI A: Full Free (Render + Vercel)**
+
 ```
 Backend:  Render.com   (750 jam/bulan)
 Frontend: Vercel.com   (unlimited)
@@ -211,6 +218,7 @@ Cost:     $0 SELAMANYA ✅
 ---
 
 ### **OPSI B: Full Free (Render + Netlify)**
+
 ```
 Backend:  Render.com   (750 jam/bulan)
 Frontend: Netlify.com  (unlimited)
@@ -223,6 +231,7 @@ Cost:     $0 SELAMANYA ✅
 ---
 
 ### **OPSI C: Full Free (Fly.io)**
+
 ```
 Backend + Frontend: Fly.io (free tier)
 Cost:     $0 SELAMANYA ✅
@@ -234,6 +243,7 @@ Cost:     $0 SELAMANYA ✅
 ---
 
 ### **OPSI D: GitHub Pages (Frontend Only)**
+
 ```
 Frontend: GitHub Pages (free)
 Backend:  Render.com (free)
@@ -247,13 +257,13 @@ Cost:     $0 SELAMANYA ✅
 
 ## 📊 PERBANDINGAN GRATIS
 
-| Platform | Backend | Frontend | Biaya | Effort | Best For |
-|----------|---------|----------|-------|--------|----------|
-| **Render** | ✅ 750h | ✅ 750h | FREE | Easy | Backend + Frontend |
-| **Vercel** | ❌ | ✅ | FREE | Easy | Frontend only |
-| **Netlify** | ❌ | ✅ | FREE | Easy | Frontend only |
-| **Fly.io** | ✅ | ✅ | FREE | Medium | Fullstack |
-| **GitHub Pages** | ❌ | ✅ Static | FREE | Hard | Static site |
+| Platform         | Backend | Frontend  | Biaya | Effort | Best For           |
+| ---------------- | ------- | --------- | ----- | ------ | ------------------ |
+| **Render**       | ✅ 750h | ✅ 750h   | FREE  | Easy   | Backend + Frontend |
+| **Vercel**       | ❌      | ✅        | FREE  | Easy   | Frontend only      |
+| **Netlify**      | ❌      | ✅        | FREE  | Easy   | Frontend only      |
+| **Fly.io**       | ✅      | ✅        | FREE  | Medium | Fullstack          |
+| **GitHub Pages** | ❌      | ✅ Static | FREE  | Hard   | Static site        |
 
 ---
 
@@ -266,7 +276,7 @@ Cost:     $0 SELAMANYA ✅
 1. https://render.com → New Web Service
 2. Connect pkl4 repo
 3. Root: server
-4. Auto-deploy! 
+4. Auto-deploy!
 5. Get URL: https://absensi-backend.onrender.com
 ```
 
@@ -293,6 +303,7 @@ Cost:     $0 SELAMANYA ✅
 ## ⚠️ LIMITASI GRATIS YANG HARUS TAHU
 
 ### **Render 750 jam/bulan**
+
 ```
 = 750 / 24 = 31 hari
 = UNLIMITED 24/7 berjalan
@@ -301,6 +312,7 @@ Jadi gratis SELAMANYA tanpa stop! ✅
 ```
 
 ### **Vercel Free Tier**
+
 ```
 - Build: 100 per hari (unlimited sebenarnya)
 - Deployments: Unlimited
@@ -311,6 +323,7 @@ Untuk app kecil, tidak akan pernah hit limit ✅
 ```
 
 ### **Netlify Free Tier**
+
 ```
 - Bandwidth: 100 GB/bulan
 - Builds: 300 minutes/bulan
@@ -325,10 +338,10 @@ Cukup untuk traffic medium ✅
 
 Upgrade dari:
 
-| Free → Paid |
-|------------|
-| Render 750h → Render $7/mo |
-| Vercel free → Vercel $20/mo |
+| Free → Paid                   |
+| ----------------------------- |
+| Render 750h → Render $7/mo    |
+| Vercel free → Vercel $20/mo   |
 | Netlify free → Netlify $19/mo |
 
 Tapi mulai dengan gratis dulu! Upgrade nanti kalau perlu.

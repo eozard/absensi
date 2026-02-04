@@ -2,16 +2,16 @@
 
 ## 📊 Perbandingan Platform Hosting
 
-| Platform | Gratis | Harga Paid | Setup | Catatan |
-|----------|--------|-----------|-------|--------|
-| **Railway** | $5/bulan | $5/service | Mudah | ⭐ Recommended |
-| **Render** | 750 jam | $7/month | Mudah | Backend + Frontend terpisah |
-| **Vercel** | Unlimited | $20/month | Mudah | Frontend only (bagus pairing) |
-| **Heroku** | ❌ Tutup | $50/month | Mudah | Legacy, tidak direkomendasikan |
-| **AWS** | 1 tahun free | $3-50/month | Medium | Lebih kompleks |
-| **DigitalOcean** | - | $6/month | Medium | VPS, full control |
-| **Fly.io** | Ada free | $10-20/month | Medium | Bagus untuk Node.js |
-| **Netlify** | Unlimited | $19/month | Mudah | Frontend only |
+| Platform         | Gratis       | Harga Paid   | Setup  | Catatan                        |
+| ---------------- | ------------ | ------------ | ------ | ------------------------------ |
+| **Railway**      | $5/bulan     | $5/service   | Mudah  | ⭐ Recommended                 |
+| **Render**       | 750 jam      | $7/month     | Mudah  | Backend + Frontend terpisah    |
+| **Vercel**       | Unlimited    | $20/month    | Mudah  | Frontend only (bagus pairing)  |
+| **Heroku**       | ❌ Tutup     | $50/month    | Mudah  | Legacy, tidak direkomendasikan |
+| **AWS**          | 1 tahun free | $3-50/month  | Medium | Lebih kompleks                 |
+| **DigitalOcean** | -            | $6/month     | Medium | VPS, full control              |
+| **Fly.io**       | Ada free     | $10-20/month | Medium | Bagus untuk Node.js            |
+| **Netlify**      | Unlimited    | $19/month    | Mudah  | Frontend only                  |
 
 ---
 
@@ -35,6 +35,7 @@
 ```
 
 **Setup:**
+
 ```
 1. https://railway.app → Login GitHub
 2. New Project → Select repo
@@ -63,6 +64,7 @@
 **Setup:**
 
 **Backend (Web Service):**
+
 ```bash
 1. https://render.com → New → Web Service
 2. Connect GitHub repo
@@ -73,6 +75,7 @@
 ```
 
 **Frontend (Static Site):**
+
 ```bash
 1. New → Static Site
 2. Same repo
@@ -102,6 +105,7 @@
 ```
 
 **Frontend di Vercel:**
+
 ```bash
 1. https://vercel.com → Import project
 2. Root Directory: client
@@ -131,6 +135,7 @@
 ```
 
 **Setup:**
+
 ```bash
 npm install -g flyctl
 flyctl auth login
@@ -158,6 +163,7 @@ flyctl deploy
 ```
 
 **Setup:**
+
 ```bash
 1. Create $6/month Ubuntu Droplet
 2. SSH ke server
@@ -179,29 +185,39 @@ Heroku di-remove free tier November 2022. Tidak rekomendasikan lagi.
 ## 🎯 REKOMENDASI BERDASARKAN KEBUTUHAN
 
 ### **Ingin Cepat & Mudah?**
+
 → **Railway** atau **Render**
+
 - Setup 5 menit
 - Auto-deploy dari GitHub
 - Cocok untuk project baru
 
 ### **Budget Super Terbatas?**
+
 → **Render Free Tier** (750 jam/bulan)
+
 - Atau **Vercel** (unlimited frontend)
 - Bisa pairing keduanya
 
 ### **Performa Frontend Penting?**
+
 → **Vercel + Railway/Render**
+
 - Vercel CDN untuk frontend
 - Railway untuk backend
 
 ### **Jangka Panjang & Stabil?**
+
 → **DigitalOcean VPS** ($6/month)
+
 - Fixed cost
 - Full control
 - Unlimited resources
 
 ### **Production-grade?**
+
 → **AWS** atau **Google Cloud**
+
 - Auto-scaling
 - Load balancing
 - Monitoring
@@ -212,12 +228,14 @@ Heroku di-remove free tier November 2022. Tidak rekomendasikan lagi.
 ## 💰 ESTIMASI BIAYA/BULAN
 
 ### Option A: Railway (All-in-One)
+
 ```
 $5 (free credit) + overage jika banyak
 = $5-15/bulan
 ```
 
 ### Option B: Render Backend + Vercel Frontend
+
 ```
 Render: $7 (backend)
 Vercel: Free (frontend)
@@ -225,6 +243,7 @@ Vercel: Free (frontend)
 ```
 
 ### Option C: Vercel + Railway
+
 ```
 Vercel: Free (frontend)
 Railway: $5 credit
@@ -232,12 +251,14 @@ Railway: $5 credit
 ```
 
 ### Option D: DigitalOcean VPS
+
 ```
 $6 droplet (1GB RAM)
 = $6/bulan (fixed)
 ```
 
 ### Option E: AWS Free Tier (1 tahun)
+
 ```
 Free: $0 (tahun pertama)
 Paid: $3-10/bulan (after)
@@ -264,6 +285,7 @@ Jika mau test multiple platforms:
 ## ⚡ QUICK START ALTERNATIVES
 
 ### **Render Backend:**
+
 ```bash
 # No code needed, just connect repo:
 1. https://render.com/new
@@ -274,6 +296,7 @@ Jika mau test multiple platforms:
 ```
 
 ### **Fly.io:**
+
 ```bash
 flyctl launch --nodejs
 # Interactive setup, follow prompts
@@ -281,6 +304,7 @@ flyctl deploy
 ```
 
 ### **DigitalOcean:**
+
 ```bash
 # Create droplet → SSH → Run setup script
 # (docs/setup-vps.sh bisa dibuat)
@@ -330,6 +354,7 @@ flyctl deploy
 **For Your Project:**
 
 ### Phase 1: Development/Testing (NOW)
+
 ```
 ✅ Railway $5/month
 - Fastest to deploy
@@ -338,6 +363,7 @@ flyctl deploy
 ```
 
 ### Phase 2: Production (Later)
+
 ```
 ✅ DigitalOcean $6/month (if stable)
 - OR keep Railway if budget allows
@@ -359,6 +385,7 @@ flyctl deploy
 ---
 
 **TL;DR:**
+
 - **Now?** Railway atau Render
 - **Frontend important?** Vercel + Railway
 - **Long term?** DigitalOcean VPS

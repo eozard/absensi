@@ -26,6 +26,7 @@ choco install supabase
 ```
 
 Verify:
+
 ```bash
 supabase --version
 ```
@@ -57,6 +58,7 @@ supabase link --project-ref pxrqmqelmpnnxgnofhwp
 ```
 
 Verify:
+
 ```bash
 supabase projects list
 ```
@@ -72,6 +74,7 @@ supabase functions new check-ip
 ```
 
 Output:
+
 ```
 Created new function: supabase/functions/check-ip
 ```
@@ -97,7 +100,7 @@ serve(async (req) => {
     }
 
     // Get client IP from request
-    const clientIP = 
+    const clientIP =
       req.headers.get('cf-connecting-ip') ||  // Cloudflare
       req.headers.get('x-forwarded-for') ||   // Proxy
       req.headers.get('x-real-ip') ||         // Nginx
@@ -123,7 +126,7 @@ serve(async (req) => {
     // Check IP
     if (!isValidIP) {
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           error: 'Hanya bisa login dari WiFi Kampus',
           clientIP: clientIP,
           expectedRange: campusIPRange
@@ -190,25 +193,25 @@ serve(async (req) => {
         },
         message: `Login berhasil dari IP: ${clientIP}`
       }),
-      { 
-        status: 200, 
-        headers: { 
+      {
+        status: 200,
+        headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*'
-        } 
+        }
       }
     )
 
   } catch (error) {
     console.error('Error:', error)
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: 'Server error',
         details: error.message
       }),
-      { 
-        status: 500, 
-        headers: { 'Content-Type': 'application/json' } 
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
       }
     )
   }
@@ -246,6 +249,7 @@ curl -X POST http://localhost:54321/functions/v1/check-ip \
 ```
 
 Response:
+
 ```json
 {
   "success": true,
@@ -271,6 +275,7 @@ supabase functions deploy check-ip
 ```
 
 Output:
+
 ```
 Deploying function 'check-ip'...
 ✓ Function deployed successfully
@@ -298,11 +303,11 @@ Replace login handler:
 ```javascript
 const handleLogin = async (e) => {
   e.preventDefault();
-  
+
   try {
     // Generate device ID
     const deviceId = await getDeviceIdSync();
-    
+
     // Call Supabase Function instead of direct backend
     const response = await fetch(
       `https://pxrqmqelmpnnxgnofhwp.supabase.co/functions/v1/check-ip`,
@@ -404,15 +409,15 @@ serve(async (req) => {
 
 ## 📊 PERBANDINGAN SOLUTION
 
-| Aspek | Express Backend | Supabase Functions |
-|-------|-----------------|-------------------|
-| **Setup Complexity** | Easy | Medium |
-| **Hosting Required** | Yes ($0-5/mo) | No ✅ |
-| **Scaling** | Manual | Auto ✅ |
-| **Cost** | $0-5/month | FREE ✅ |
-| **Cold Start** | None | Yes (~1s first request) |
-| **Development** | Fast | Medium |
-| **Production Ready** | Yes ✅ | Yes ✅ |
+| Aspek                | Express Backend | Supabase Functions      |
+| -------------------- | --------------- | ----------------------- |
+| **Setup Complexity** | Easy            | Medium                  |
+| **Hosting Required** | Yes ($0-5/mo)   | No ✅                   |
+| **Scaling**          | Manual          | Auto ✅                 |
+| **Cost**             | $0-5/month      | FREE ✅                 |
+| **Cold Start**       | None            | Yes (~1s first request) |
+| **Development**      | Fast            | Medium                  |
+| **Production Ready** | Yes ✅          | Yes ✅                  |
 
 ---
 
@@ -421,6 +426,7 @@ serve(async (req) => {
 ### **For your project:**
 
 **OPTION A: Keep Express.js (Simpler)**
+
 ```
 Pros:
 - Already working locally
@@ -435,6 +441,7 @@ Status: ✅ Ready to deploy to Render
 ```
 
 **OPTION B: Switch to Supabase Functions (Serverless)**
+
 ```
 Pros:
 - No hosting needed
