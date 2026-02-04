@@ -43,7 +43,7 @@ app.use(express.json());
 app.use(cors());
 
 // Trust proxy untuk mendapatkan real IP dari Railway/Nginx/Load Balancer
-app.set('trust proxy', true);
+app.set("trust proxy", true);
 
 // Serve static files from frontend build (production) or public folder
 const clientPath = path.join(__dirname, "..", "client");
@@ -65,25 +65,25 @@ app.get("/health", (req, res) => {
 
 // IP Check endpoint (for testing WiFi restriction)
 app.get("/api/check-ip", (req, res) => {
-  const ip = 
-    req.headers['x-forwarded-for']?.split(',')[0].trim() || 
-    req.headers['x-real-ip'] || 
-    req.ip || 
+  const ip =
+    req.headers["x-forwarded-for"]?.split(",")[0].trim() ||
+    req.headers["x-real-ip"] ||
+    req.ip ||
     req.connection.remoteAddress;
 
-  const isWiFiKampus = /^103\.209\.9\.\d{1,3}$/.test(ip);
+  const isWiFiKampus = /^112\.215\.235\.\d{1,3}$/.test(ip);
 
   res.json({
     success: true,
     detectedIP: ip,
     isWiFiKampus: isWiFiKampus,
-    message: isWiFiKampus 
-      ? "✅ Anda terhubung ke WiFi Kampus" 
+    message: isWiFiKampus
+      ? "✅ Anda terhubung ke WiFi Kampus"
       : "❌ Anda TIDAK terhubung ke WiFi Kampus",
     headers: {
-      'x-forwarded-for': req.headers['x-forwarded-for'],
-      'x-real-ip': req.headers['x-real-ip']
-    }
+      "x-forwarded-for": req.headers["x-forwarded-for"],
+      "x-real-ip": req.headers["x-real-ip"],
+    },
   });
 });
 
