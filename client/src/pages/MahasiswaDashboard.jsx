@@ -127,6 +127,16 @@ const MahasiswaDashboard = () => {
       const deviceId = localStorage.getItem("deviceId") || "device_unknown";
       const now = new Date();
 
+      // Check WiFi sebelum absen
+      const wifiCheck = await axiosInstance.get("/check-ip");
+      if (!wifiCheck.data?.isWiFiKampus) {
+        const msg =
+          wifiCheck.data?.message ||
+          "Absensi hanya dapat dilakukan dari WiFi Sekolah";
+        setMessage(`❌ ${msg}`);
+        return;
+      }
+
       const response = await axiosInstance.post("/absen", {
         login_time: now.toISOString(),
         deviceId,
