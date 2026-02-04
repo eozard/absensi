@@ -71,7 +71,7 @@ app.get("/api/check-ip", (req, res) => {
     req.ip ||
     req.connection.remoteAddress;
 
-  const isWiFiKampus = /^112\.215\.171\.\d{1,3}$/.test(ip);
+  const isWiFiKampus = /^103\.209\.9\.\d{1,3}$/.test(ip);
 
   res.json({
     success: true,
