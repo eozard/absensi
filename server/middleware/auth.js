@@ -9,6 +9,7 @@ const getJWTSecret = () => {
 };
 
 export const verifyToken = (req, res, next) => {
+  console.log("\n🔐 VERIFY_TOKEN MIDDLEWARE");
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -30,12 +31,14 @@ export const verifyToken = (req, res, next) => {
 };
 
 export const isMahasiswa = (req, res, next) => {
+  console.log("📚 IS_MAHASISWA MIDDLEWARE - User role:", req.user.role);
   if (req.user.role !== "mahasiswa" && req.user.role !== "anak_smk") {
     return res.status(403).json({
       success: false,
       message: "Akses hanya untuk mahasiswa/anak SMK",
     });
   }
+  console.log("✅ IS_MAHASISWA: Passed");
   next();
 };
 
