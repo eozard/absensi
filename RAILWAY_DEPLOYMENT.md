@@ -1,6 +1,7 @@
 # Railway Deployment Guide
 
 ## Prerequisites
+
 - GitHub repository connected to Railway
 - Supabase project with credentials ready
 
@@ -24,16 +25,19 @@ NODE_ENV=production
 ## Step 2: Configure Node.js Version
 
 Railway will automatically detect Node.js 20 from:
+
 - `.node-version` file (contains `20.11.0`)
 - `package.json` engines field (`"node": ">=20.0.0"`)
 
 ## Step 3: Deploy
 
 ### Option A: Auto-deploy from GitHub
+
 - Push code to `main` branch
 - Railway automatically builds and deploys
 
 ### Option B: Manual Deploy
+
 1. In Railway dashboard, click service
 2. Click "Deploy" button
 3. Select `main` branch
@@ -41,11 +45,13 @@ Railway will automatically detect Node.js 20 from:
 ## Step 4: Verify Deployment
 
 Check logs:
+
 ```
 railway logs
 ```
 
 Should see:
+
 ```
 Server running on http://0.0.0.0:PORT
 Connected to Supabase ✓
@@ -54,15 +60,18 @@ Connected to Supabase ✓
 ## Troubleshooting
 
 ### Error: "SUPABASE_URL dan SUPABASE_ANON_KEY harus didefinisikan"
+
 - ✅ Make sure variables are set in Railway dashboard (NOT in code)
 - ✅ Redeploy after adding variables
 - ✅ Check variable names are exact (case-sensitive)
 
 ### Error: "Node.js 18 and below are deprecated"
+
 - ✅ Already fixed with `.node-version` file
 - ✅ Railway will use Node.js 20.11.0 automatically
 
 ### Error: "npm ci" fails
+
 - ✅ Lock files are regenerated and committed
 - ✅ Delete old lock files if needed: `npm install` locally then push
 
@@ -83,6 +92,7 @@ app.listen(PORT, '0.0.0.0', () => {
 ## Frontend Deployment (Optional)
 
 For frontend, use:
+
 - **Vercel** (free) - recommended
 - **Netlify** (free)
 - **Railway** (as second backend - not recommended)
