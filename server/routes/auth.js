@@ -278,7 +278,7 @@ export const absen = async (req, res) => {
     console.log("\n" + "=".repeat(60));
     console.log("📝 ABSEN ROUTE HANDLER CALLED");
     console.log("=".repeat(60));
-    
+
     const { login_time, deviceId } = req.body;
     const { nama, role, kelompok } = req.user;
 
@@ -312,8 +312,11 @@ export const absen = async (req, res) => {
 
     // Parse login time
     const loginDateTime = new Date(login_time);
-    const hour = loginDateTime.getHours();
-    const minute = loginDateTime.getMinutes();
+    
+    // Convert ke timezone Indonesia (UTC+7)
+    const jakartaTime = new Date(loginDateTime.getTime() + (7 * 60 * 60 * 1000));
+    const hour = jakartaTime.getHours();
+    const minute = jakartaTime.getMinutes();
     const timeInMinutes = hour * 60 + minute;
 
     // Determine sesi
