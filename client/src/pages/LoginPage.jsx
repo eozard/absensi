@@ -117,18 +117,6 @@ const LoginPage = () => {
             </button>
           </form>
         </div>
-
-        <div className="text-center mt-4 text-sm text-gray-600">
-          <p className="font-semibold mb-1">Demo Credentials:</p>
-          <p>
-            Admin: <span className="font-mono">admin</span> /{" "}
-            <span className="font-mono">admin123</span>
-          </p>
-          <p>
-            Siswa: <span className="font-mono">[nama siswa]</span> /{" "}
-            <span className="font-mono">12345678</span>
-          </p>
-        </div>
       </div>
     </div>
   );

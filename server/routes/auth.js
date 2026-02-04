@@ -312,9 +312,9 @@ export const absen = async (req, res) => {
 
     // Parse login time
     const loginDateTime = new Date(login_time);
-    
+
     // Convert ke timezone Indonesia (UTC+7)
-    const jakartaTime = new Date(loginDateTime.getTime() + (7 * 60 * 60 * 1000));
+    const jakartaTime = new Date(loginDateTime.getTime() + 7 * 60 * 60 * 1000);
     const hour = jakartaTime.getHours();
     const minute = jakartaTime.getMinutes();
     const timeInMinutes = hour * 60 + minute;
