@@ -12,8 +12,8 @@ const axiosInstance = axios.create({
 // Add token to every request
 axiosInstance.interceptors.request.use(
   (config) => {
-    // Don't require token for login endpoint
-    if (config.url === "/login") {
+    // Don't require token for public endpoints
+    if (config.url === "/login" || config.url === "/check-ip") {
       return config;
     }
 
