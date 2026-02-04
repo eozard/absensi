@@ -275,8 +275,17 @@ export const login = async (req, res) => {
 // POST /api/absen
 export const absen = async (req, res) => {
   try {
+    console.log("\n" + "=".repeat(60));
+    console.log("📝 ABSEN ROUTE HANDLER CALLED");
+    console.log("=".repeat(60));
+    
     const { login_time, deviceId } = req.body;
     const { nama, role, kelompok } = req.user;
+
+    console.log(`👤 User: ${nama}`);
+    console.log(`🔐 Role: ${role}`);
+    console.log(`📱 Device ID: ${deviceId}`);
+    console.log("=".repeat(60) + "\n");
 
     if (!login_time || !deviceId) {
       return res.status(400).json({
