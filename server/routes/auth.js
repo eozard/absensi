@@ -362,14 +362,38 @@ export const absen = async (req, res) => {
         });
       }
 
-      // Check jeda 6 jam
+      // Check jeda 6 jam (waktu istirahat 12:00-13:00 tidak dihitung)
       const pagiLoginTime = new Date(pagiAttendance[0].login_time);
-      const diffHours = (loginDateTime - pagiLoginTime) / (1000 * 60 * 60);
+      const diffMinutesRaw = (loginDateTime - pagiLoginTime) / (1000 * 60);
+
+      const pagiJakarta = new Date(
+        pagiLoginTime.getTime() + 7 * 60 * 60 * 1000,
+      );
+      const soreJakarta = new Date(
+        loginDateTime.getTime() + 7 * 60 * 60 * 1000,
+      );
+
+      let overlapMinutes = 0;
+      if (pagiJakarta.toDateString() === soreJakarta.toDateString()) {
+        const startMinutes =
+          pagiJakarta.getHours() * 60 + pagiJakarta.getMinutes();
+        const endMinutes =
+          soreJakarta.getHours() * 60 + soreJakarta.getMinutes();
+        const breakStart = 12 * 60; // 12:00
+        const breakEnd = 13 * 60; // 13:00
+        overlapMinutes = Math.max(
+          0,
+          Math.min(endMinutes, breakEnd) - Math.max(startMinutes, breakStart),
+        );
+      }
+
+      const effectiveDiffMinutes = diffMinutesRaw - overlapMinutes;
+      const diffHours = effectiveDiffMinutes / 60;
 
       if (diffHours < 6) {
         return res.status(403).json({
           success: false,
-          message: `Jeda absen pagi-sore minimal 6 jam. Waktu tersisa: ${(6 - diffHours).toFixed(1)} jam`,
+          message: `Jeda absen pagi-sore minimal 6 jam (di luar istirahat). Waktu tersisa: ${(6 - diffHours).toFixed(1)} jam`,
         });
       }
     }
