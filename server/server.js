@@ -27,7 +27,6 @@ import {
   deleteDevice,
   getUsers,
   createUser,
-  resetUserDevices,
   getAttendanceReport,
   getAllIzin,
   updateIzinStatus,
@@ -117,12 +116,6 @@ app.get("/api/admin/devices", verifyToken, isAdmin, getDevices);
 app.delete("/api/admin/devices/:deviceId", verifyToken, isAdmin, deleteDevice);
 app.get("/api/admin/users", verifyToken, isAdmin, getUsers);
 app.post("/api/admin/users", verifyToken, isAdmin, createUser);
-app.post(
-  "/api/admin/users/:id/reset-devices",
-  verifyToken,
-  isAdmin,
-  resetUserDevices,
-);
 app.get("/api/admin/report", verifyToken, isAdmin, getAttendanceReport);
 app.get("/api/admin/izin", verifyToken, isAdmin, getAllIzin);
 app.put("/api/admin/izin/:id", verifyToken, isAdmin, updateIzinStatus);
