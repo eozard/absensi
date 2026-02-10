@@ -37,6 +37,9 @@ const AdminDashboard = () => {
     kelompok: "machine learning",
   });
   const [creatingUser, setCreatingUser] = useState(false);
+  const [resetUserId, setResetUserId] = useState("");
+  const [resetPassword, setResetPassword] = useState("");
+  const [resettingPassword, setResettingPassword] = useState(false);
   const [reportData, setReportData] = useState([]);
   const [reportLoading, setReportLoading] = useState(false);
   const [reportFilters, setReportFilters] = useState({
@@ -197,6 +200,57 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleResetPassword = async () => {
+    if (!resetUserId || !resetPassword) {
+      pushToast({
+        type: "warning",
+        title: "Input belum lengkap",
+        message: "Pilih user dan isi password baru",
+      });
+      return;
+    }
+
+    setConfirmState({
+      title: "Reset password user?",
+      message: "Password lama akan diganti dengan yang baru.",
+      confirmText: "Reset",
+      tone: "danger",
+      onConfirm: async () => {
+        setResettingPassword(true);
+        try {
+          const response = await axiosInstance.post(
+            `/admin/users/${resetUserId}/reset-password`,
+            { password: resetPassword },
+          );
+
+          if (response.data.success) {
+            pushToast({
+              type: "success",
+              title: "Reset berhasil",
+              message: response.data.message,
+            });
+            setResetPassword("");
+          } else {
+            pushToast({
+              type: "error",
+              title: "Gagal",
+              message: response.data.message || "Gagal reset password",
+            });
+          }
+        } catch (error) {
+          console.error("Reset password error:", error);
+          pushToast({
+            type: "error",
+            title: "Gagal",
+            message: error.response?.data?.message || "Gagal reset password",
+          });
+        } finally {
+          setResettingPassword(false);
+        }
+      },
+    });
+  };
+
   const handleDeleteDevice = async (deviceId) => {
     setConfirmState({
       title: "Hapus device?",
@@ -267,6 +321,53 @@ const AdminDashboard = () => {
             type: "error",
             title: "Gagal",
             message: error.response?.data?.message || "Gagal reset device user",
+          });
+        }
+      },
+    });
+  };
+
+  const handleDeleteUser = async (user) => {
+    if (!user?.id) {
+      pushToast({
+        type: "error",
+        title: "Gagal",
+        message: "User id tidak ditemukan. Silakan refresh data.",
+      });
+      return;
+    }
+
+    setConfirmState({
+      title: "Hapus user?",
+      message: `User ${user.nama} akan dihapus permanen.`,
+      confirmText: "Hapus",
+      tone: "danger",
+      onConfirm: async () => {
+        try {
+          const response = await axiosInstance.delete(
+            `/admin/users/${user.id}`,
+          );
+
+          if (response.data.success) {
+            pushToast({
+              type: "success",
+              title: "User dihapus",
+              message: response.data.message,
+            });
+            setAllUsers(allUsers.filter((u) => u.id !== user.id));
+          } else {
+            pushToast({
+              type: "error",
+              title: "Gagal",
+              message: response.data.message || "Gagal menghapus user",
+            });
+          }
+        } catch (error) {
+          console.error("Delete user error:", error);
+          pushToast({
+            type: "error",
+            title: "Gagal",
+            message: error.response?.data?.message || "Gagal menghapus user",
           });
         }
       },
@@ -806,6 +907,55 @@ const AdminDashboard = () => {
               </div>
             </div>
 
+            <div className="card">
+              <h2 className="text-xl font-bold mb-4">🔒 Reset Password User</h2>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div>
+                  <label className="block text-sm font-medium mb-1">User</label>
+                  <select
+                    className="input-field"
+                    value={resetUserId}
+                    onChange={(e) => setResetUserId(e.target.value)}
+                  >
+                    <option value="">Pilih user</option>
+                    {allUsers.map((user) => (
+                      <option key={user.id || user.nama} value={user.id || ""}>
+                        {user.nama}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Password Baru
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="Password baru"
+                    className="input-field"
+                    value={resetPassword}
+                    onChange={(e) => setResetPassword(e.target.value)}
+                  />
+                </div>
+
+                <button
+                  onClick={handleResetPassword}
+                  disabled={resettingPassword}
+                  className="btn-danger flex items-center justify-center"
+                >
+                  {resettingPassword ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Resetting
+                    </>
+                  ) : (
+                    "Reset Password"
+                  )}
+                </button>
+              </div>
+            </div>
+
             {/* Users List */}
             <div className="card">
               <h2 className="text-xl font-bold mb-4">👥 Daftar Semua User</h2>
@@ -832,8 +982,8 @@ const AdminDashboard = () => {
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                     {allUsers.length > 0 ? (
-                      allUsers.map((user, idx) => (
-                        <tr key={idx} className="hover:bg-gray-50">
+                      allUsers.map((user) => (
+                        <tr key={user.id || user.nama} className="hover:bg-gray-50">
                           <td className="px-6 py-4 text-sm font-medium">
                             {user.nama}
                           </td>
@@ -865,11 +1015,11 @@ const AdminDashboard = () => {
                               <span className="text-gray-400">-</span>
                             ) : (
                               <button
-                                onClick={() => handleResetUserDevices(user)}
+                                onClick={() => handleDeleteUser(user)}
                                 className="text-red-600 hover:text-red-800 text-sm font-medium flex items-center"
-                                title="Reset semua device user"
+                                title="Hapus user"
                               >
-                                <Trash2 className="w-4 h-4 mr-1" /> Reset
+                                <Trash2 className="w-4 h-4 mr-1" /> Hapus
                               </button>
                             )}
                           </td>

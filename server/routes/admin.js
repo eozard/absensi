@@ -247,7 +247,7 @@ export const getUsers = async (req, res) => {
 
     const { data: users, error } = await supabase
       .from("users")
-      .select("nama, role, kelompok, devices")
+      .select("id, nama, role, kelompok, devices")
       .order("nama", { ascending: true });
 
     if (error) {
@@ -269,6 +269,122 @@ export const getUsers = async (req, res) => {
     });
   } catch (error) {
     console.error("Get users error:", error);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// POST /api/admin/users/:id/reset-password
+export const resetUserPassword = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { password } = req.body;
+
+    if (!id || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "User id dan password diperlukan",
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password minimal 6 karakter",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const { data, error } = await supabase
+      .from("users")
+      .update({ password: hashedPassword })
+      .eq("id", id)
+      .select("id");
+
+    if (error) {
+      console.error("Reset password error:", error.message);
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error" });
+    }
+
+    if (!data || data.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "User tidak ditemukan",
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Password user berhasil direset",
+    });
+  } catch (error) {
+    console.error("Reset password error:", error);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// DELETE /api/admin/users/:id
+export const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res
+        .status(400)
+        .json({ success: false, message: "User id diperlukan" });
+    }
+
+    const { data: user, error: userError } = await supabase
+      .from("users")
+      .select("id, nama, role")
+      .eq("id", id)
+      .single();
+
+    if (userError || !user) {
+      console.error("Get user error:", userError?.message);
+      return res
+        .status(404)
+        .json({ success: false, message: "User tidak ditemukan" });
+    }
+
+    if (user.role === "admin") {
+      return res
+        .status(403)
+        .json({ success: false, message: "Tidak bisa hapus admin" });
+    }
+
+    const { error: deleteBindingsError } = await supabase
+      .from("device_bindings")
+      .delete()
+      .eq("user_name", user.nama);
+
+    if (deleteBindingsError) {
+      console.error("Delete bindings error:", deleteBindingsError.message);
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error" });
+    }
+
+    const { error: deleteUserError } = await supabase
+      .from("users")
+      .delete()
+      .eq("id", id);
+
+    if (deleteUserError) {
+      console.error("Delete user error:", deleteUserError.message);
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error" });
+    }
+
+    return res.json({
+      success: true,
+      message: "User berhasil dihapus",
+    });
+  } catch (error) {
+    console.error("Delete user error:", error);
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
