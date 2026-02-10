@@ -247,7 +247,7 @@ export const getUsers = async (req, res) => {
 
     const { data: users, error } = await supabase
       .from("users")
-      .select("nama, role, kelompok, devices")
+      .select("id, nama, role, kelompok, devices")
       .order("nama", { ascending: true });
 
     if (error) {
@@ -269,6 +269,64 @@ export const getUsers = async (req, res) => {
     });
   } catch (error) {
     console.error("Get users error:", error);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// POST /api/admin/users/:id/reset-devices
+export const resetUserDevices = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res
+        .status(400)
+        .json({ success: false, message: "User id diperlukan" });
+    }
+
+    const { data: user, error: userError } = await supabase
+      .from("users")
+      .select("id, nama")
+      .eq("id", id)
+      .single();
+
+    if (userError || !user) {
+      console.error("Get user error:", userError?.message);
+      return res
+        .status(404)
+        .json({ success: false, message: "User tidak ditemukan" });
+    }
+
+    const { error: deleteError } = await supabase
+      .from("device_bindings")
+      .delete()
+      .eq("user_name", user.nama);
+
+    if (deleteError) {
+      console.error("Delete device bindings error:", deleteError.message);
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error" });
+    }
+
+    const { error: updateError } = await supabase
+      .from("users")
+      .update({ devices: [] })
+      .eq("id", id);
+
+    if (updateError) {
+      console.error("Reset devices error:", updateError.message);
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error" });
+    }
+
+    return res.json({
+      success: true,
+      message: "Device user berhasil direset",
+    });
+  } catch (error) {
+    console.error("Reset devices error:", error);
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };

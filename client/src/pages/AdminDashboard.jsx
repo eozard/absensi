@@ -198,6 +198,26 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleResetUserDevices = async (user) => {
+    if (!window.confirm(`Reset semua device untuk ${user.nama}?`)) return;
+
+    try {
+      const response = await axiosInstance.post(
+        `/admin/users/${user.id}/reset-devices`,
+      );
+
+      if (response.data.success) {
+        alert("Device user berhasil direset");
+        fetchAllData();
+      } else {
+        alert(response.data.message || "Gagal reset device user");
+      }
+    } catch (error) {
+      console.error("Reset user devices error:", error);
+      alert(error.response?.data?.message || "Gagal reset device user");
+    }
+  };
+
   const fetchReportData = async () => {
     setReportLoading(true);
     try {
@@ -707,6 +727,9 @@ const AdminDashboard = () => {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                         Devices
                       </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Aksi
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -739,12 +762,25 @@ const AdminDashboard = () => {
                           <td className="px-6 py-4 text-sm">
                             {user.devices_count || 0} device(s)
                           </td>
+                          <td className="px-6 py-4 text-sm">
+                            {user.role === "admin" ? (
+                              <span className="text-gray-400">-</span>
+                            ) : (
+                              <button
+                                onClick={() => handleResetUserDevices(user)}
+                                className="text-red-600 hover:text-red-800 text-sm font-medium flex items-center"
+                                title="Reset semua device user"
+                              >
+                                <Trash2 className="w-4 h-4 mr-1" /> Reset
+                              </button>
+                            )}
+                          </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
                         <td
-                          colSpan="4"
+                          colSpan="5"
                           className="px-6 py-4 text-center text-gray-500"
                         >
                           Belum ada user
