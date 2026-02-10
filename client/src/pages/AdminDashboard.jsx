@@ -13,6 +13,9 @@ import {
   Calendar,
 } from "lucide-react";
 import axiosInstance from "../utils/axios";
+import ToastStack from "../components/Toast";
+import ConfirmDialog from "../components/ConfirmDialog";
+import { useToast } from "../hooks/useToast";
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("stats");
@@ -45,6 +48,8 @@ const AdminDashboard = () => {
   });
   const [izinList, setIzinList] = useState([]);
   const [izinLoading, setIzinLoading] = useState(false);
+  const [confirmState, setConfirmState] = useState(null);
+  const { toasts, pushToast, dismissToast } = useToast();
   const navigate = useNavigate();
 
   const kelompokOptions = [
@@ -53,45 +58,6 @@ const AdminDashboard = () => {
     "jaringan",
     "desain komunikasi visual",
   ];
-
-  useEffect(() => {
-    // Check auth
-    const token = localStorage.getItem("token");
-    const user = JSON.parse(localStorage.getItem("user") || "null");
-
-    console.log("🔐 Admin Dashboard - Token check:", {
-      hasToken: !!token,
-      tokenLength: token?.length,
-      user: user?.nama,
-      role: user?.role,
-    });
-
-    if (!token || !user || user.role !== "admin") {
-      console.warn("⚠️ Redirecting to login - auth failed");
-      navigate("/");
-      return;
-    }
-
-    // Delay to ensure token is ready
-    const timer = setTimeout(() => {
-      console.log("📡 Starting to fetch admin data...");
-      fetchAllData();
-    }, 200);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    // Auto-fetch report data ketika tab report dibuka
-    if (activeTab === "report") {
-      fetchReportData();
-    }
-    // Auto-fetch izin data ketika tab izin dibuka
-    if (activeTab === "izin") {
-      fetchIzinData();
-    }
-  }, [activeTab]);
-
   const fetchAllData = async () => {
     setLoading(true);
     try {
@@ -117,6 +83,41 @@ const AdminDashboard = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // Check auth
+    const token = localStorage.getItem("token");
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+
+    console.log("🔐 Admin Dashboard - Token check:", {
+      hasToken: !!token,
+      tokenLength: token?.length,
+      user: user?.nama,
+      role: user?.role,
+    });
+
+    if (!token || !user || user.role !== "admin") {
+      console.warn("⚠️ Redirecting to login - auth failed");
+      navigate("/");
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      console.log("📡 Starting to fetch admin data...");
+      fetchAllData();
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === "report") {
+      fetchReportData();
+    }
+    if (activeTab === "izin") {
+      fetchIzinData();
+    }
+  }, [activeTab]);
 
   const fetchStudentAttendance = async (nama) => {
     if (!nama) return;
@@ -147,7 +148,11 @@ const AdminDashboard = () => {
 
   const handleCreateUser = async () => {
     if (!newUser.nama || !newUser.password) {
-      alert("Nama dan password harus diisi");
+      pushToast({
+        type: "warning",
+        title: "Input belum lengkap",
+        message: "Nama dan password harus diisi",
+      });
       return;
     }
 
@@ -161,64 +166,114 @@ const AdminDashboard = () => {
       });
 
       if (response.data.success) {
-        alert("User berhasil dibuat");
+        pushToast({
+          type: "success",
+          title: "User dibuat",
+          message: "User berhasil dibuat",
+        });
         setNewUser({
           nama: "",
           password: "",
           role: "mahasiswa",
           kelompok: "kelompok_1",
         });
-        fetchAllData(); // Refresh daftar user
+        fetchAllData();
       } else {
-        alert(response.data.message || "Gagal membuat user");
+        pushToast({
+          type: "error",
+          title: "Gagal",
+          message: response.data.message || "Gagal membuat user",
+        });
       }
     } catch (error) {
       console.error("Create user error:", error);
-      alert(error.response?.data?.message || "Gagal membuat user");
+      pushToast({
+        type: "error",
+        title: "Gagal",
+        message: error.response?.data?.message || "Gagal membuat user",
+      });
     } finally {
       setCreatingUser(false);
     }
   };
 
   const handleDeleteDevice = async (deviceId) => {
-    if (!window.confirm("Hapus device ini?")) return;
+    setConfirmState({
+      title: "Hapus device?",
+      message: "Device ini akan dihapus dari daftar perangkat terikat.",
+      confirmText: "Hapus",
+      tone: "danger",
+      onConfirm: async () => {
+        try {
+          const response = await axiosInstance.delete(
+            `/admin/devices/${deviceId}`,
+          );
 
-    try {
-      const response = await axiosInstance.delete(`/admin/devices/${deviceId}`);
-
-      if (response.data.success) {
-        alert("Device berhasil dihapus");
-        setDevices(devices.filter((d) => d.device_id !== deviceId));
-      } else {
-        alert(response.data.message || "Gagal menghapus device");
-      }
-    } catch (error) {
-      console.error("Delete device error:", error);
-      alert(error.response?.data?.message || "Gagal menghapus device");
-    }
+          if (response.data.success) {
+            pushToast({
+              type: "success",
+              title: "Device dihapus",
+              message: "Device berhasil dihapus",
+            });
+            setDevices(devices.filter((d) => d.device_id !== deviceId));
+          } else {
+            pushToast({
+              type: "error",
+              title: "Gagal",
+              message: response.data.message || "Gagal menghapus device",
+            });
+          }
+        } catch (error) {
+          console.error("Delete device error:", error);
+          pushToast({
+            type: "error",
+            title: "Gagal",
+            message: error.response?.data?.message || "Gagal menghapus device",
+          });
+        }
+      },
+    });
   };
 
   const handleResetUserDevices = async (user) => {
-    if (!window.confirm(`Reset semua device untuk ${user.nama}?`)) return;
+    setConfirmState({
+      title: "Reset device user?",
+      message: `Semua device untuk ${user.nama} akan dihapus.`,
+      confirmText: "Reset",
+      tone: "danger",
+      onConfirm: async () => {
+        try {
+          const response = await axiosInstance.post(
+            `/admin/users/${user.id}/reset-devices`,
+          );
 
-    try {
-      const response = await axiosInstance.post(
-        `/admin/users/${user.id}/reset-devices`,
-      );
-
-      if (response.data.success) {
-        alert("Device user berhasil direset");
-        fetchAllData();
-      } else {
-        alert(response.data.message || "Gagal reset device user");
-      }
-    } catch (error) {
-      console.error("Reset user devices error:", error);
-      alert(error.response?.data?.message || "Gagal reset device user");
-    }
+          if (response.data.success) {
+            pushToast({
+              type: "success",
+              title: "Reset berhasil",
+              message: "Device user berhasil direset",
+            });
+            fetchAllData();
+          } else {
+            pushToast({
+              type: "error",
+              title: "Gagal",
+              message: response.data.message || "Gagal reset device user",
+            });
+          }
+        } catch (error) {
+          console.error("Reset user devices error:", error);
+          pushToast({
+            type: "error",
+            title: "Gagal",
+            message: error.response?.data?.message || "Gagal reset device user",
+          });
+        }
+      },
+    });
   };
 
-  const fetchReportData = async () => {
+  async function fetchReportData() {
     setReportLoading(true);
     try {
       const params = new URLSearchParams({
@@ -234,15 +289,23 @@ const AdminDashboard = () => {
       }
     } catch (error) {
       console.error("Fetch report error:", error);
-      alert("Gagal memuat data report");
+      pushToast({
+        type: "error",
+        title: "Gagal",
+        message: "Gagal memuat data report",
+      });
     } finally {
       setReportLoading(false);
     }
-  };
+  }
 
   const handleExportReport = () => {
     if (reportData.length === 0) {
-      alert("Tidak ada data untuk diekspor");
+      pushToast({
+        type: "warning",
+        title: "Tidak ada data",
+        message: "Tidak ada data untuk diekspor",
+      });
       return;
     }
 
@@ -259,9 +322,15 @@ const AdminDashboard = () => {
     link.download = `report-absensi-${reportFilters.fromDate}-to-${reportFilters.toDate}.csv`;
     link.click();
     URL.revokeObjectURL(url);
+
+    pushToast({
+      type: "success",
+      title: "Export siap",
+      message: "File report berhasil dibuat",
+    });
   };
 
-  const fetchIzinData = async () => {
+  async function fetchIzinData() {
     setIzinLoading(true);
     try {
       const response = await axiosInstance.get("/admin/izin");
@@ -273,26 +342,40 @@ const AdminDashboard = () => {
     } finally {
       setIzinLoading(false);
     }
-  };
+  }
 
   const handleUpdateIzin = async (id, status) => {
     const confirmMsg =
-      status === "approved"
-        ? "Yakin ingin menyetujui izin ini?"
-        : "Yakin ingin menolak izin ini?";
+      status === "approved" ? "Setujui izin ini?" : "Tolak izin ini?";
 
-    if (!confirm(confirmMsg)) return;
-
-    try {
-      const response = await axiosInstance.put(`/admin/izin/${id}`, { status });
-      if (response.data.success) {
-        alert(response.data.message);
-        fetchIzinData(); // Refresh data
-      }
-    } catch (error) {
-      const msg = error.response?.data?.message || "Gagal update izin";
-      alert(msg);
-    }
+    setConfirmState({
+      title: status === "approved" ? "Setujui izin?" : "Tolak izin?",
+      message: confirmMsg,
+      confirmText: status === "approved" ? "Setujui" : "Tolak",
+      tone: status === "approved" ? "primary" : "danger",
+      onConfirm: async () => {
+        try {
+          const response = await axiosInstance.put(`/admin/izin/${id}`, {
+            status,
+          });
+          if (response.data.success) {
+            pushToast({
+              type: "success",
+              title: "Berhasil",
+              message: response.data.message,
+            });
+            fetchIzinData();
+          }
+        } catch (error) {
+          const msg = error.response?.data?.message || "Gagal update izin";
+          pushToast({
+            type: "error",
+            title: "Gagal",
+            message: msg,
+          });
+        }
+      },
+    });
   };
 
   const handleExport = () => {
@@ -339,6 +422,21 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <ToastStack toasts={toasts} onDismiss={dismissToast} />
+      <ConfirmDialog
+        open={!!confirmState}
+        title={confirmState?.title}
+        message={confirmState?.message}
+        confirmText={confirmState?.confirmText}
+        cancelText={confirmState?.cancelText}
+        tone={confirmState?.tone}
+        onCancel={() => setConfirmState(null)}
+        onConfirm={async () => {
+          const action = confirmState?.onConfirm;
+          setConfirmState(null);
+          if (action) await action();
+        }}
+      />
       {/* Header */}
       <div className="bg-white shadow-sm border-b sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-4">

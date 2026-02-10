@@ -11,6 +11,9 @@ import {
   X,
 } from "lucide-react";
 import axiosInstance from "../utils/axios";
+import ToastStack from "../components/Toast";
+import ConfirmDialog from "../components/ConfirmDialog";
+import { useToast } from "../hooks/useToast";
 
 const MahasiswaDashboard = () => {
   const [user, setUser] = useState(null);
@@ -20,13 +23,14 @@ const MahasiswaDashboard = () => {
   const [timeRemaining, setTimeRemaining] = useState(10 * 60);
   const [canAbsenPagi, setCanAbsenPagi] = useState(false);
   const [canAbsenSore, setCanAbsenSore] = useState(false);
-  const [message, setMessage] = useState("");
   const [showIzinModal, setShowIzinModal] = useState(false);
   const [izinData, setIzinData] = useState({
     keterangan: "",
   });
   const [izinList, setIzinList] = useState([]);
   const [izinLoading, setIzinLoading] = useState(false);
+  const [confirmState, setConfirmState] = useState(null);
+  const { toasts, pushToast, dismissToast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -104,24 +108,36 @@ const MahasiswaDashboard = () => {
   };
 
   const handleCancelIzin = async (id) => {
-    if (!confirm("Yakin ingin membatalkan izin ini?")) return;
-
-    try {
-      const response = await axiosInstance.delete(`/izin/${id}`);
-      if (response.data.success) {
-        setMessage(`✅ ${response.data.message}`);
-        fetchIzin();
-        setTimeout(() => setMessage(""), 3000);
-      }
-    } catch (error) {
-      const msg = error.response?.data?.message || "Gagal membatalkan izin";
-      setMessage(`❌ ${msg}`);
-    }
+    setConfirmState({
+      title: "Batalkan izin?",
+      message: "Izin ini akan dibatalkan dan tidak bisa dikembalikan.",
+      confirmText: "Batalkan",
+      tone: "danger",
+      onConfirm: async () => {
+        try {
+          const response = await axiosInstance.delete(`/izin/${id}`);
+          if (response.data.success) {
+            pushToast({
+              type: "success",
+              title: "Izin dibatalkan",
+              message: response.data.message,
+            });
+            fetchIzin();
+          }
+        } catch (error) {
+          const msg = error.response?.data?.message || "Gagal membatalkan izin";
+          pushToast({
+            type: "error",
+            title: "Gagal",
+            message: msg,
+          });
+        }
+      },
+    });
   };
 
   const handleAbsen = async (sesi) => {
     setAbsenLoading(true);
-    setMessage("");
 
     try {
       const deviceId = localStorage.getItem("deviceId") || "device_unknown";
@@ -133,7 +149,11 @@ const MahasiswaDashboard = () => {
         const msg =
           wifiCheck.data?.message ||
           "Absensi hanya dapat dilakukan dari WiFi Sekolah";
-        setMessage(`❌ ${msg}`);
+        pushToast({
+          type: "warning",
+          title: "WiFi tidak sesuai",
+          message: msg,
+        });
         return;
       }
 
@@ -143,13 +163,20 @@ const MahasiswaDashboard = () => {
       });
 
       if (response.data.success) {
-        setMessage(response.data.message);
-        setTimeout(() => setMessage(""), 3000);
+        pushToast({
+          type: "success",
+          title: "Absensi berhasil",
+          message: response.data.message,
+        });
         fetchRiwayat();
       }
     } catch (error) {
       const msg = error.response?.data?.message || "Absen gagal";
-      setMessage(`❌ ${msg}`);
+      pushToast({
+        type: "error",
+        title: "Absen gagal",
+        message: msg,
+      });
       console.error("Absen error:", msg);
     } finally {
       setAbsenLoading(false);
@@ -168,21 +195,27 @@ const MahasiswaDashboard = () => {
   const handleSubmitIzin = async (e) => {
     e.preventDefault();
     setIzinLoading(true);
-    setMessage("");
 
     try {
       const response = await axiosInstance.post("/izin", izinData);
 
       if (response.data.success) {
-        setMessage(`✅ ${response.data.message}`);
+        pushToast({
+          type: "success",
+          title: "Izin terkirim",
+          message: response.data.message,
+        });
         setShowIzinModal(false);
         setIzinData({ keterangan: "" });
         fetchIzin();
-        setTimeout(() => setMessage(""), 3000);
       }
     } catch (error) {
       const msg = error.response?.data?.message || "Gagal mengajukan izin";
-      setMessage(`❌ ${msg}`);
+      pushToast({
+        type: "error",
+        title: "Izin gagal",
+        message: msg,
+      });
       console.error("Izin error:", msg);
     } finally {
       setIzinLoading(false);
@@ -233,6 +266,21 @@ const MahasiswaDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <ToastStack toasts={toasts} onDismiss={dismissToast} />
+      <ConfirmDialog
+        open={!!confirmState}
+        title={confirmState?.title}
+        message={confirmState?.message}
+        confirmText={confirmState?.confirmText}
+        cancelText={confirmState?.cancelText}
+        tone={confirmState?.tone}
+        onCancel={() => setConfirmState(null)}
+        onConfirm={async () => {
+          const action = confirmState?.onConfirm;
+          setConfirmState(null);
+          if (action) await action();
+        }}
+      />
       {/* Header */}
       <div className="bg-white shadow-sm border-b sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-4">
@@ -332,19 +380,6 @@ const MahasiswaDashboard = () => {
               </div>
             </div>
           </div>
-
-          {/* Message */}
-          {message && (
-            <div
-              className={`rounded-lg p-4 mb-4 text-sm ${
-                message.startsWith("❌")
-                  ? "bg-red-50 border border-red-200 text-red-800"
-                  : "bg-green-50 border border-green-200 text-green-800"
-              }`}
-            >
-              {message}
-            </div>
-          )}
 
           {/* Buttons */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

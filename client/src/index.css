@@ -52,4 +52,57 @@
   .badge-blue {
     @apply badge bg-blue-100 text-blue-800;
   }
+
+  .toast {
+    @apply w-80 rounded-2xl border border-transparent bg-white/95 px-4 py-3 shadow-xl backdrop-blur;
+  }
+
+  .toast-success {
+    @apply border-emerald-200 bg-emerald-50/80 text-emerald-900;
+  }
+
+  .toast-error {
+    @apply border-rose-200 bg-rose-50/80 text-rose-900;
+  }
+
+  .toast-warning {
+    @apply border-amber-200 bg-amber-50/80 text-amber-900;
+  }
+
+  .toast-info {
+    @apply border-sky-200 bg-sky-50/80 text-sky-900;
+  }
+
+  .toast-icon {
+    @apply mt-0.5 rounded-full bg-white/70 p-1.5 shadow-sm;
+  }
+
+  .toast-title {
+    @apply text-sm font-semibold;
+  }
+
+  .toast-message {
+    @apply text-sm leading-snug;
+  }
+
+  .toast-close {
+    @apply text-gray-500 transition hover:text-gray-900;
+  }
+}
+
+@layer utilities {
+  @keyframes toast-in {
+    0% {
+      transform: translateY(-10px) scale(0.98);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+  }
+
+  .toast-enter {
+    animation: toast-in 160ms ease-out;
+  }
 }
