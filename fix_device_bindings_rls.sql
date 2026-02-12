@@ -1,4 +1,5 @@
 -- Fix untuk Device Bindings - Enable RLS dan create policies
+-- Tujuan: mengatur policy device_bindings dan users saat diperlukan
 
 -- 1. Check current RLS status
 SELECT tablename, rowsecurity 

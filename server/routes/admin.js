@@ -1,3 +1,6 @@
+/*
+ * Admin routes: stats, users, devices, reports, izin approvals.
+ */
 import express from "express";
 import bcrypt from "bcryptjs";
 import { supabase } from "../config/supabase.js";
@@ -5,6 +8,7 @@ import { supabase } from "../config/supabase.js";
 const router = express.Router();
 
 // GET /api/admin/stats
+// Ringkasan statistik untuk kartu dashboard
 export const getStats = async (req, res) => {
   try {
     console.log("📊 Get admin stats");
@@ -59,6 +63,7 @@ export const getStats = async (req, res) => {
 };
 
 // GET /api/admin/attendance-today
+// Rekap absensi hari ini (pagi/sore)
 export const getAttendanceToday = async (req, res) => {
   try {
     const today = new Date().toISOString().split("T")[0];
@@ -113,6 +118,7 @@ export const getAttendanceToday = async (req, res) => {
 };
 
 // GET /api/admin/students
+// Daftar mahasiswa/anak SMK
 export const getStudents = async (req, res) => {
   try {
     console.log("� Get all students");
@@ -141,6 +147,7 @@ export const getStudents = async (req, res) => {
 };
 
 // GET /api/admin/attendance/:nama
+// Riwayat absensi per siswa
 export const getStudentAttendance = async (req, res) => {
   try {
     const { nama } = req.params;
@@ -185,6 +192,7 @@ export const getStudentAttendance = async (req, res) => {
 };
 
 // GET /api/admin/devices
+// Daftar semua device terikat
 export const getDevices = async (req, res) => {
   try {
     console.log("📱 Get all devices");
@@ -212,6 +220,7 @@ export const getDevices = async (req, res) => {
 };
 
 // DELETE /api/admin/devices/:deviceId
+// Hapus ikatan device tertentu
 export const deleteDevice = async (req, res) => {
   try {
     const { deviceId } = req.params;
@@ -241,6 +250,7 @@ export const deleteDevice = async (req, res) => {
 };
 
 // GET /api/admin/users
+// Daftar user + hitung jumlah device
 export const getUsers = async (req, res) => {
   try {
     console.log("👥 Get all users");
@@ -274,6 +284,7 @@ export const getUsers = async (req, res) => {
 };
 
 // POST /api/admin/users/:id/reset-password
+// Admin mengganti password user
 export const resetUserPassword = async (req, res) => {
   try {
     const { id } = req.params;
@@ -326,6 +337,7 @@ export const resetUserPassword = async (req, res) => {
 };
 
 // DELETE /api/admin/users/:id
+// Hapus user (non-admin) + bersihkan device bindings
 export const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
@@ -390,6 +402,7 @@ export const deleteUser = async (req, res) => {
 };
 
 // POST /api/admin/users
+// Buat user baru (hash password)
 export const createUser = async (req, res) => {
   try {
     const { nama, password, role, kelompok } = req.body;

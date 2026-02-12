@@ -1,3 +1,6 @@
+/*
+ * Simple role-based route guard for admin/mahasiswa pages.
+ */
 import React from "react";
 import { Navigate } from "react-router-dom";
 

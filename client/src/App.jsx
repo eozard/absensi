@@ -1,3 +1,7 @@
+/*
+ * App routes for the web UI (login, admin, mahasiswa).
+ * Uses role-based protected routes.
+ */
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";

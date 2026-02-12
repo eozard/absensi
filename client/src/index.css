@@ -1,3 +1,4 @@
+/* Global Tailwind layers and shared UI utility classes. */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

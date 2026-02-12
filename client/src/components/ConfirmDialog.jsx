@@ -1,3 +1,6 @@
+/*
+ * Reusable confirm dialog for destructive actions.
+ */
 import React from "react";
 
 const toneClassMap = {

@@ -1,3 +1,6 @@
+/*
+ * Toast state + auto-dismiss helpers.
+ */
 import { useCallback, useRef, useState } from "react";
 
 const createId = () =>

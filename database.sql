@@ -1,4 +1,5 @@
 -- Database Schema untuk Sistem Absensi PKL (Supabase/PostgreSQL)
+-- Tujuan: struktur tabel utama (users, attendances, device_bindings, izin)
 
 -- Table: users
 CREATE TABLE users (

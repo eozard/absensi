@@ -1,3 +1,6 @@
+/*
+ * Login page for all users; sends deviceId for binding checks.
+ */
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { LogIn, Loader2 } from "lucide-react";
@@ -11,6 +14,7 @@ const LoginPage = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  // Proses login: kirim nama+password+deviceId
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");

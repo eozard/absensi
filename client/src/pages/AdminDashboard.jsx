@@ -1,3 +1,7 @@
+/*
+ * Admin dashboard: stats, users, devices, attendance, reports, izin actions.
+ * Handles admin-only operations like create user, reset password, delete user.
+ */
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -18,6 +22,7 @@ import ConfirmDialog from "../components/ConfirmDialog";
 import { useToast } from "../hooks/useToast";
 
 const AdminDashboard = () => {
+  // State utama untuk tab dan data dashboard
   const [activeTab, setActiveTab] = useState("stats");
   const [stats, setStats] = useState(null);
   const [attendanceToday, setAttendanceToday] = useState([]);
@@ -30,6 +35,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  // State form buat user baru
   const [newUser, setNewUser] = useState({
     nama: "",
     password: "",
@@ -37,9 +43,11 @@ const AdminDashboard = () => {
     kelompok: "machine learning",
   });
   const [creatingUser, setCreatingUser] = useState(false);
+  // State reset password user
   const [resetUserId, setResetUserId] = useState("");
   const [resetPassword, setResetPassword] = useState("");
   const [resettingPassword, setResettingPassword] = useState(false);
+  // State laporan absensi
   const [reportData, setReportData] = useState([]);
   const [reportLoading, setReportLoading] = useState(false);
   const [reportFilters, setReportFilters] = useState({
@@ -49,9 +57,11 @@ const AdminDashboard = () => {
     toDate: new Date().toISOString().split("T")[0],
     kelompok: "all",
   });
+  // State daftar izin
   const [izinList, setIzinList] = useState([]);
   const [izinLoading, setIzinLoading] = useState(false);
   const [confirmState, setConfirmState] = useState(null);
+  // Notifikasi toast untuk feedback user
   const { toasts, pushToast, dismissToast } = useToast();
   const navigate = useNavigate();
 
@@ -61,6 +71,7 @@ const AdminDashboard = () => {
     "jaringan",
     "desain komunikasi visual",
   ];
+  // Ambil semua data dashboard admin sekaligus
   const fetchAllData = async () => {
     setLoading(true);
     try {
@@ -87,6 +98,7 @@ const AdminDashboard = () => {
     }
   };
 
+  // Cek login admin saat pertama kali masuk
   useEffect(() => {
     // Check auth
     const token = localStorage.getItem("token");
@@ -113,6 +125,7 @@ const AdminDashboard = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  // Auto-fetch saat tab report/izin dibuka
   useEffect(() => {
     if (activeTab === "report") {
       fetchReportData();
@@ -149,6 +162,7 @@ const AdminDashboard = () => {
     navigate("/");
   };
 
+  // Buat user baru dari form
   const handleCreateUser = async () => {
     if (!newUser.nama || !newUser.password) {
       pushToast({
@@ -200,6 +214,7 @@ const AdminDashboard = () => {
     }
   };
 
+  // Reset password user terpilih
   const handleResetPassword = async () => {
     if (!resetUserId || !resetPassword) {
       pushToast({
@@ -251,6 +266,7 @@ const AdminDashboard = () => {
     });
   };
 
+  // Hapus device dari daftar binding
   const handleDeleteDevice = async (deviceId) => {
     setConfirmState({
       title: "Hapus device?",
@@ -327,6 +343,7 @@ const AdminDashboard = () => {
     });
   };
 
+  // Hapus user (non-admin) dari sistem
   const handleDeleteUser = async (user) => {
     if (!user?.id) {
       pushToast({
@@ -374,6 +391,7 @@ const AdminDashboard = () => {
     });
   };
 
+  // Ambil laporan absensi berdasarkan filter
   async function fetchReportData() {
     setReportLoading(true);
     try {
@@ -400,6 +418,7 @@ const AdminDashboard = () => {
     }
   }
 
+  // Export laporan ke CSV
   const handleExportReport = () => {
     if (reportData.length === 0) {
       pushToast({
@@ -431,6 +450,7 @@ const AdminDashboard = () => {
     });
   };
 
+  // Ambil daftar izin untuk approval
   async function fetchIzinData() {
     setIzinLoading(true);
     try {
@@ -445,6 +465,7 @@ const AdminDashboard = () => {
     }
   }
 
+  // Setujui / tolak izin
   const handleUpdateIzin = async (id, status) => {
     const confirmMsg =
       status === "approved" ? "Setujui izin ini?" : "Tolak izin ini?";
@@ -479,6 +500,7 @@ const AdminDashboard = () => {
     });
   };
 
+  // Export rekap absensi hari ini ke CSV
   const handleExport = () => {
     let csv = "Nama,Kelompok,Pagi,Sore,Status\n";
     attendanceToday.forEach((row) => {
@@ -973,7 +995,7 @@ const AdminDashboard = () => {
                         Kelompok
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Devices
+                        Device Terdaftar (Terpakai/Maks)
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                         Aksi
@@ -983,7 +1005,10 @@ const AdminDashboard = () => {
                   <tbody className="divide-y divide-gray-200">
                     {allUsers.length > 0 ? (
                       allUsers.map((user) => (
-                        <tr key={user.id || user.nama} className="hover:bg-gray-50">
+                        <tr
+                          key={user.id || user.nama}
+                          className="hover:bg-gray-50"
+                        >
                           <td className="px-6 py-4 text-sm font-medium">
                             {user.nama}
                           </td>
@@ -1008,7 +1033,9 @@ const AdminDashboard = () => {
                             {user.kelompok || "-"}
                           </td>
                           <td className="px-6 py-4 text-sm">
-                            {user.devices_count || 0} device(s)
+                            {user.role === "admin"
+                              ? "-"
+                              : `${user.devices_count ?? 0}/${user.max_devices ?? 0}`}
                           </td>
                           <td className="px-6 py-4 text-sm">
                             {user.role === "admin" ? (

@@ -1,3 +1,6 @@
+/*
+ * Toast stack for success/error/warning/info notifications.
+ */
 import React from "react";
 import { CheckCircle, XCircle, AlertTriangle, Info, X } from "lucide-react";
 

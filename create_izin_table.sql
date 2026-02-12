@@ -1,4 +1,5 @@
 -- SQL untuk membuat table izin di Supabase
+-- Tujuan: tabel izin mahasiswa (pending/approved/rejected)
 -- Jalankan di Supabase SQL Editor
 
 CREATE TABLE IF NOT EXISTS izin (

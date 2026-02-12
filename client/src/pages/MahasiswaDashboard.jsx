@@ -1,3 +1,6 @@
+/*
+ * Mahasiswa dashboard: absensi, riwayat, izin, WiFi check, and notifications.
+ */
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -16,6 +19,7 @@ import ConfirmDialog from "../components/ConfirmDialog";
 import { useToast } from "../hooks/useToast";
 
 const MahasiswaDashboard = () => {
+  // State utama untuk user dan data absensi
   const [user, setUser] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,6 +27,7 @@ const MahasiswaDashboard = () => {
   const [timeRemaining, setTimeRemaining] = useState(10 * 60);
   const [canAbsenPagi, setCanAbsenPagi] = useState(false);
   const [canAbsenSore, setCanAbsenSore] = useState(false);
+  // State modal dan data izin
   const [showIzinModal, setShowIzinModal] = useState(false);
   const [izinData, setIzinData] = useState({
     keterangan: "",
@@ -30,9 +35,11 @@ const MahasiswaDashboard = () => {
   const [izinList, setIzinList] = useState([]);
   const [izinLoading, setIzinLoading] = useState(false);
   const [confirmState, setConfirmState] = useState(null);
+  // Notifikasi toast untuk feedback user
   const { toasts, pushToast, dismissToast } = useToast();
   const navigate = useNavigate();
 
+  // Cek login dan ambil data awal
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user") || "null");
     const token = localStorage.getItem("token");
@@ -55,6 +62,7 @@ const MahasiswaDashboard = () => {
     }, 150);
   }, []);
 
+  // Update status waktu absen setiap detik
   useEffect(() => {
     const timer = setInterval(() => {
       const now = new Date();
@@ -83,6 +91,7 @@ const MahasiswaDashboard = () => {
     return () => clearInterval(timer);
   }, []);
 
+  // Ambil riwayat absensi user
   const fetchRiwayat = async () => {
     try {
       const response = await axiosInstance.get("/riwayat");
@@ -96,6 +105,7 @@ const MahasiswaDashboard = () => {
     }
   };
 
+  // Ambil daftar izin user
   const fetchIzin = async () => {
     try {
       const response = await axiosInstance.get("/izin");
@@ -107,6 +117,7 @@ const MahasiswaDashboard = () => {
     }
   };
 
+  // Batalkan izin yang masih pending
   const handleCancelIzin = async (id) => {
     setConfirmState({
       title: "Batalkan izin?",
@@ -136,6 +147,7 @@ const MahasiswaDashboard = () => {
     });
   };
 
+  // Proses absen: cek WiFi, kirim login_time
   const handleAbsen = async (sesi) => {
     setAbsenLoading(true);
 
@@ -192,6 +204,7 @@ const MahasiswaDashboard = () => {
     navigate("/");
   };
 
+  // Kirim izin baru
   const handleSubmitIzin = async (e) => {
     e.preventDefault();
     setIzinLoading(true);
@@ -222,6 +235,7 @@ const MahasiswaDashboard = () => {
     }
   };
 
+  // Helper untuk menampilkan sesi saat ini
   const getCurrentSession = () => {
     const now = new Date();
     const hours = now.getHours();
