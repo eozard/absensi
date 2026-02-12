@@ -7,12 +7,12 @@
  * 2. ABSEN - Submit absensi harian (pagi/sore)
  * 3. RIWAYAT - Lihat history absensi
  * 4. IZIN - Submit, lihat, dan batalkan permohonan izin
- * 
+ *
  * KONSEP DEVICE BINDING:
  * Setiap user hanya bisa login dari device yang terdaftar (max 2-3 device).
  * Device diidentifikasi dengan fingerprint unik dari browser.
  * Tujuan: Mencegah sharing akun antar siswa.
- * 
+ *
  * FLOW LOGIN:
  * 1. Client kirim {nama, password, deviceId}
  * 2. Server cek apakah user exists
@@ -45,19 +45,19 @@ const getJWTSecret = () => {
  * ENDPOINT: POST /api/login
  * ============================================================================
  * Fungsi: Autentikasi user dan device binding
- * 
+ *
  * REQUEST BODY:
  * - nama: string (username/nama lengkap)
  * - password: string (plain text, akan di-hash compare)
  * - deviceId: string (fingerprint dari browser)
- * 
+ *
  * RESPONSE SUCCESS (200):
  * {
  *   success: true,
  *   token: "eyJhbGci...", // JWT token
  *   user: { id, nama, role, kelompok }
  * }
- * 
+ *
  * CARA KERJA DEVICE BINDING:
  * 1. Cek di tabel device_bindings apakah deviceId sudah terikat ke user lain
  * 2. Jika ya → TOLAK login dengan error 403
@@ -66,7 +66,7 @@ const getJWTSecret = () => {
  *    a. Simpan device ke kolom users.devices (JSONB array)
  *    b. Insert/update ke tabel device_bindings
  * 5. Generate JWT token dan return ke client
- * 
+ *
  * KEAMANAN:
  * - Admin tidak dibatasi device (bisa login dari device apapun)
  * - Mahasiswa max 2-3 device (sesuai users.max_devices)
@@ -132,7 +132,7 @@ export const login = async (req, res) => {
     // Skip untuk admin (admin bisa login dari device apapun)
     if (user.role !== "admin") {
       console.log("🔍 Checking device binding...");
-      
+
       // Query tabel device_bindings untuk cek apakah deviceId sudah terdaftar
       const { data: deviceBindings, error: deviceError } = await supabase
         .from("device_bindings")
@@ -149,7 +149,7 @@ export const login = async (req, res) => {
       // Jika device sudah terdaftar, cek apakah terikat ke user yang berbeda
       if (deviceBindings && deviceBindings.length > 0) {
         const boundUser = deviceBindings[0];
-        
+
         // TOLAK jika device sudah terikat ke user lain
         if (boundUser.user_name !== nama) {
           console.log(
@@ -160,7 +160,7 @@ export const login = async (req, res) => {
             message: `Device sudah terikat untuk user lain (${boundUser.user_name})`,
           });
         }
-        
+
         console.log(`✅ Device ${deviceId} milik user ${nama} (valid)`);
       } else {
         console.log(`🆕 Device ${deviceId} adalah device baru`);
@@ -190,7 +190,7 @@ export const login = async (req, res) => {
       if (!deviceExists) {
         // DEVICE BARU: Perlu daftarkan
         console.log(`🆕 Registering new device for user ${nama}`);
-        
+
         // Cek batas maksimal device
         if (existingDevices.length >= user.max_devices) {
           console.log(
@@ -271,7 +271,7 @@ export const login = async (req, res) => {
       } else {
         // DEVICE SUDAH ADA: Update usage count dan last used
         console.log(`🔄 Updating existing device for user ${nama}`);
-        
+
         const deviceIndex = existingDevices.findIndex(
           (d) => d.deviceId === deviceId,
         );
@@ -373,18 +373,18 @@ export const login = async (req, res) => {
  * ============================================================================
  * Fungsi: Submit absensi harian (pagi atau sore)
  * Middleware: verifyToken + isMahasiswa + wifiKampus
- * 
+ *
  * REQUEST BODY:
  * - login_time: string ISO timestamp (waktu absen)
  * - deviceId: string (fingerprint device)
- * 
+ *
  * RESPONSE SUCCESS (200):
  * {
  *   success: true,
  *   message: "Absen pagi berhasil tercatat",
  *   attendance: { ... }
  * }
- * 
+ *
  * ATURAN ABSENSI:
  * 1. WAKTU PAGI: 08:00 - 14:40
  * 2. WAKTU SORE: 15:00 - 18:00
@@ -393,7 +393,7 @@ export const login = async (req, res) => {
  * 5. Device harus terdaftar (ada di device_bindings)
  * 6. Hanya dari WiFi kampus (middleware wifiKampus)
  * 7. Tidak boleh absen 2 kali untuk sesi yang sama
- * 
+ *
  * CARA KERJA:
  * 1. Validasi input (login_time, deviceId)
  * 2. Cek device terdaftar (query device_bindings)
@@ -406,9 +406,9 @@ export const login = async (req, res) => {
  */
 export const absen = async (req, res) => {
   try {
-    console.log(\"\\n\" + \"=\".repeat(60));
-    console.log(\"📝 ABSEN ROUTE HANDLER CALLED\");
-    console.log(\"=\".repeat(60));
+    console.log("\n" + "=".repeat(60));
+    console.log("📝 ABSEN ROUTE HANDLER CALLED");
+    console.log("=".repeat(60));
 
     const { login_time, deviceId } = req.body;
     const { nama, role, kelompok } = req.user; // Dari JWT token (sudah di-decode oleh verifyToken)
@@ -416,13 +416,13 @@ export const absen = async (req, res) => {
     console.log(`👤 User: ${nama}`);
     console.log(`🔐 Role: ${role}`);
     console.log(`📱 Device ID: ${deviceId}`);
-    console.log(\"=\".repeat(60) + \"\\n\");
+    console.log("=".repeat(60) + "\n");
 
     // STEP 1: Validasi input
     if (!login_time || !deviceId) {
       return res.status(400).json({
         success: false,
-        message: \"login_time dan deviceId diperlukan\",
+        message: "login_time dan deviceId diperlukan",
       });
     }
 
@@ -431,15 +431,15 @@ export const absen = async (req, res) => {
     // STEP 2: Validasi device
     // Pastikan device terdaftar di device_bindings
     const { data: deviceBindings, error: deviceError } = await supabase
-      .from(\"device_bindings\")
-      .select(\"*\")
-      .eq(\"device_id\", deviceId);
+      .from("device_bindings")
+      .select("*")
+      .eq("device_id", deviceId);
 
     if (deviceError || !deviceBindings || deviceBindings.length === 0) {
       console.log(`❌ Device ${deviceId} tidak terdaftar`);
       return res.status(403).json({
         success: false,
-        message: \"Device tidak terdaftar\",
+        message: "Device tidak terdaftar",
       });
     }
 
@@ -461,43 +461,43 @@ export const absen = async (req, res) => {
     const soreEnd = 18 * 60; // 18:00 = 1080 menit
 
     if (timeInMinutes >= pagiStart && timeInMinutes <= pagiEnd) {
-      sesi = \"pagi\";
+      sesi = "pagi";
     } else if (timeInMinutes >= soreStart && timeInMinutes <= soreEnd) {
-      sesi = \"sore\";
+      sesi = "sore";
     } else {
       // Waktu di luar jam absen
       return res.status(403).json({
         success: false,
         message:
-          \"Waktu absensi tidak valid. Pagi: 08:00-14:40, Sore: 15:00-18:00\",
+          "Waktu absensi tidak valid. Pagi: 08:00-14:40, Sore: 15:00-18:00",
       });
     }
 
     // STEP 5: Validasi khusus untuk absen sore
     // Harus sudah absen pagi + jeda minimal 6 jam (exclude istirahat)
-    if (sesi === \"sore\") {
-      const today = loginDateTime.toISOString().split(\"T\")[0]; // Format: YYYY-MM-DD
-      
+    if (sesi === "sore") {
+      const today = loginDateTime.toISOString().split("T")[0]; // Format: YYYY-MM-DD
+
       // Cek apakah sudah absen pagi hari ini
       const { data: pagiAttendance, error: pagiError } = await supabase
-        .from(\"attendances\")
-        .select(\"*\")
-        .eq(\"nama\", nama)
-        .eq(\"tanggal\", today)
-        .eq(\"sesi\", \"pagi\");
+        .from("attendances")
+        .select("*")
+        .eq("nama", nama)
+        .eq("tanggal", today)
+        .eq("sesi", "pagi");
 
       if (pagiError) {
-        console.error(\"Pagi attendance check error:\", pagiError.message);
+        console.error("Pagi attendance check error:", pagiError.message);
         return res
           .status(500)
-          .json({ success: false, message: \"Database error\" });
+          .json({ success: false, message: "Database error" });
       }
 
       // Tolak jika belum absen pagi
       if (!pagiAttendance || pagiAttendance.length === 0) {
         return res.status(403).json({
           success: false,
-          message: \"Harus sudah absen pagi sebelum absen sore\",
+          message: "Harus sudah absen pagi sebelum absen sore",
         });
       }
 
@@ -523,7 +523,7 @@ export const absen = async (req, res) => {
           soreJakarta.getHours() * 60 + soreJakarta.getMinutes();
         const breakStart = 12 * 60; // 12:00
         const breakEnd = 13 * 60; // 13:00
-        
+
         // Hitung overlap (jika ada)
         overlapMinutes = Math.max(
           0,
@@ -545,19 +545,19 @@ export const absen = async (req, res) => {
     }
 
     // STEP 6: Cek duplikat absen (tidak boleh absen 2x untuk sesi yang sama)
-    const today = loginDateTime.toISOString().split(\"T\")[0];
+    const today = loginDateTime.toISOString().split("T")[0];
     const { data: existingAttendance, error: existingError } = await supabase
-      .from(\"attendances\")
-      .select(\"*\")
-      .eq(\"nama\", nama)
-      .eq(\"tanggal\", today)
-      .eq(\"sesi\", sesi);
+      .from("attendances")
+      .select("*")
+      .eq("nama", nama)
+      .eq("tanggal", today)
+      .eq("sesi", sesi);
 
     if (existingError) {
-      console.error(\"Duplicate check error:\", existingError.message);
+      console.error("Duplicate check error:", existingError.message);
       return res
         .status(500)
-        .json({ success: false, message: \"Database error\" });
+        .json({ success: false, message: "Database error" });
     }
 
     // Tolak jika sudah absen di sesi yang sama
@@ -570,26 +570,26 @@ export const absen = async (req, res) => {
     }
 
     // STEP 7: Insert absensi ke database
-    const jamMasuk = `${String(hour).padStart(2, \"0\")}:${String(minute).padStart(2, \"0\")}:00`; // Format: HH:MM:SS
+    const jamMasuk = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00`; // Format: HH:MM:SS
 
     const { data: newAttendance, error: insertError } = await supabase
-      .from(\"attendances\")
+      .from("attendances")
       .insert({
         nama,
         kelompok,
         tanggal: today, // YYYY-MM-DD
-        sesi, // \"pagi\" atau \"sore\"
+        sesi, // "pagi" atau "sore"
         jam_masuk: jamMasuk, // HH:MM:SS
         login_time: loginDateTime.toISOString(), // ISO timestamp lengkap
-        status: \"hadir\",
+        status: "hadir",
       })
       .select();
 
     if (insertError) {
-      console.error(\"Insert attendance error:\", insertError.message);
+      console.error("Insert attendance error:", insertError.message);
       return res
         .status(500)
-        .json({ success: false, message: \"Database error\" });
+        .json({ success: false, message: "Database error" });
     }
 
     console.log(`✅ Absen berhasil: ${nama} - ${sesi} - ${jamMasuk}`);
@@ -601,8 +601,8 @@ export const absen = async (req, res) => {
       attendance: newAttendance[0],
     });
   } catch (error) {
-    console.error(\"Absen error:\", error);
-    return res.status(500).json({ success: false, message: \"Server error\" });
+    console.error("Absen error:", error);
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
