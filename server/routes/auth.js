@@ -628,15 +628,23 @@ export const absen = async (req, res) => {
 };
 
 // GET /api/izin - Get izin mahasiswa
+// GET /api/izin - Lihat daftar izin yang sudah diajukan
+// Query dari tabel attendances dengan status='izin'
 export const getIzin = async (req, res) => {
   try {
     const { nama } = req.user;
 
+    console.log(`📋 Get izin untuk: ${nama}`);
+
+    // Query izin dari tabel attendances (status='izin')
     const { data: izinList, error } = await supabase
-      .from("izin")
-      .select("*")
+      .from("attendances")
+      .select(
+        "id, nama, kelompok, tanggal, sesi, keterangan, status_approval, approved_by, approved_at, created_at",
+      )
       .eq("nama", nama)
-      .order("created_at", { ascending: false });
+      .eq("status", "izin")
+      .order("tanggal", { ascending: false });
 
     if (error) {
       console.error("Get izin error:", error.message);
@@ -656,6 +664,7 @@ export const getIzin = async (req, res) => {
 };
 
 // DELETE /api/izin/:id - Batalkan izin (hanya pending)
+// Hapus record izin dari tabel attendances
 export const cancelIzin = async (req, res) => {
   try {
     const { nama } = req.user;
@@ -663,10 +672,11 @@ export const cancelIzin = async (req, res) => {
 
     // Check if izin exists and belongs to user
     const { data: izinData, error: fetchError } = await supabase
-      .from("izin")
+      .from("attendances")
       .select("*")
       .eq("id", id)
       .eq("nama", nama)
+      .eq("status", "izin")
       .single();
 
     if (fetchError || !izinData) {
@@ -676,16 +686,17 @@ export const cancelIzin = async (req, res) => {
       });
     }
 
-    if (izinData.status !== "pending") {
+    // Hanya bisa batalkan izin dengan status_approval null atau pending
+    if (izinData.status_approval && izinData.status_approval !== "pending") {
       return res.status(403).json({
         success: false,
         message: "Hanya izin pending yang bisa dibatalkan",
       });
     }
 
-    // Delete izin
+    // Delete izin dari attendances
     const { error: deleteError } = await supabase
-      .from("izin")
+      .from("attendances")
       .delete()
       .eq("id", id);
 
@@ -708,12 +719,14 @@ export const cancelIzin = async (req, res) => {
   }
 };
 
-// POST /api/izin
+// POST /api/izin - Submit permohonan izin
+// Insert izin ke tabel attendances dengan status='izin'
 export const submitIzin = async (req, res) => {
   try {
     const { nama, kelompok } = req.user;
-    const { keterangan } = req.body;
+    const { keterangan, sesi, bukti_url } = req.body;
 
+    // Validasi input
     if (!keterangan) {
       return res.status(400).json({
         success: false,
@@ -722,17 +735,27 @@ export const submitIzin = async (req, res) => {
     }
 
     const today = new Date().toISOString().split("T")[0];
-    console.log(`📝 Submit izin: ${nama} untuk hari ini (${today})`);
+    const sesiIzin = sesi || "harian"; // Default harian jika tidak spesifik sesi
 
-    // Insert izin
+    console.log(
+      `📝 Submit izin: ${nama} untuk ${today} (sesi: ${sesiIzin}, alasan: ${keterangan})`,
+    );
+
+    // Insert izin ke tabel attendances
+    // Untuk izin: jam_masuk dan login_time bisa null
     const { data, error } = await supabase
-      .from("izin")
+      .from("attendances")
       .insert({
         nama,
         kelompok,
         tanggal: today,
+        sesi: sesiIzin,
+        status: "izin", // Status izin
+        jam_masuk: null, // Tidak ada jam masuk untuk izin
+        login_time: null, // Tidak ada login time untuk izin
         keterangan,
-        status: "pending",
+        bukti_url: bukti_url || null,
+        status_approval: "pending", // Default pending menunggu admin approve
         created_at: new Date().toISOString(),
       })
       .select();
@@ -748,7 +771,7 @@ export const submitIzin = async (req, res) => {
 
     return res.json({
       success: true,
-      message: "Izin berhasil diajukan",
+      message: "Izin berhasil diajukan. Menunggu persetujuan admin.",
       data: data[0],
     });
   } catch (error) {

@@ -522,14 +522,20 @@ export const getAttendanceReport = async (req, res) => {
 };
 
 // GET /api/admin/izin - Get all izin requests
+// GET /api/admin/izin - Lihat semua permohonan izin
+// Query izin dari tabel attendances dengan status='izin'
 export const getAllIzin = async (req, res) => {
   try {
     console.log("📋 Get all izin requests");
 
+    // Query izin dari tabel attendances (status='izin')
     const { data: izinList, error } = await supabase
-      .from("izin")
-      .select("*")
-      .order("created_at", { ascending: false });
+      .from("attendances")
+      .select(
+        "id, nama, kelompok, tanggal, sesi, keterangan, bukti_url, status_approval, approved_by, approved_at, created_at",
+      )
+      .eq("status", "izin")
+      .order("tanggal", { ascending: false });
 
     if (error) {
       console.error("Get izin error:", error.message);
@@ -549,6 +555,7 @@ export const getAllIzin = async (req, res) => {
 };
 
 // PUT /api/admin/izin/:id - Approve/Reject izin
+// Update status_approval di tabel attendances
 export const updateIzinStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -564,14 +571,16 @@ export const updateIzinStatus = async (req, res) => {
 
     console.log(`✏️ Update izin ${id} to ${status} by ${adminName}`);
 
+    // Update izin di tabel attendances dengan kolom status_approval
     const { data, error } = await supabase
-      .from("izin")
+      .from("attendances")
       .update({
-        status,
+        status_approval: status,
         approved_by: adminName,
         approved_at: new Date().toISOString(),
       })
       .eq("id", id)
+      .eq("status", "izin")
       .select();
 
     if (error) {
@@ -587,6 +596,8 @@ export const updateIzinStatus = async (req, res) => {
         message: "Izin tidak ditemukan",
       });
     }
+
+    console.log(`✅ Izin ${id} berhasil ${status === "approved" ? "disetujui" : "ditolak"}`);
 
     return res.json({
       success: true,
