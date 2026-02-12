@@ -141,6 +141,21 @@ app.get("/health", (req, res) => {
  * Berguna untuk debugging saat deploy
  */
 app.get("/api/check-ip", (req, res) => {
+  // Check bypass mode dulu
+  if (process.env.BYPASS_WIFI_CHECK === "true") {
+    res.json({
+      success: true,
+      detectedIP: "bypassed",
+      isWiFiKampus: true,
+      message: "✅ WiFi check bypassed (development mode)",
+      headers: {
+        "x-forwarded-for": req.headers["x-forwarded-for"],
+        "x-real-ip": req.headers["x-real-ip"],
+      },
+    });
+    return;
+  }
+
   // Extract IP dari berbagai header (support proxy)
   const ip =
     req.headers["x-forwarded-for"]?.split(",")[0].trim() ||
