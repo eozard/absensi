@@ -460,17 +460,27 @@ export const absen = async (req, res) => {
     const soreStart = 15 * 60; // 15:00 = 900 menit
     const soreEnd = 22 * 60; // 22:00 = 1320 menit
 
-    if (timeInMinutes >= pagiStart && timeInMinutes <= pagiEnd) {
-      sesi = "pagi";
-    } else if (timeInMinutes >= soreStart && timeInMinutes <= soreEnd) {
-      sesi = "sore";
+    // Check apakah time validation di-bypass (development mode)
+    // Jika BYPASS_TIME_CHECK=true, default ke sesi "pagi"
+    if (process.env.BYPASS_TIME_CHECK === "true") {
+      console.log(
+        "⏰ Time check bypassed (development mode) - defaulting to pagi",
+      );
+      sesi = "pagi"; // Default ke pagi untuk testing
     } else {
-      // Waktu di luar jam absen
-      return res.status(403).json({
-        success: false,
-        message:
-          "Waktu absensi tidak valid. Pagi: 08:00-15:00, Sore: 15:00-22:00",
-      });
+      // Mode production: validasi jam normal
+      if (timeInMinutes >= pagiStart && timeInMinutes <= pagiEnd) {
+        sesi = "pagi";
+      } else if (timeInMinutes >= soreStart && timeInMinutes <= soreEnd) {
+        sesi = "sore";
+      } else {
+        // Waktu di luar jam absen
+        return res.status(403).json({
+          success: false,
+          message:
+            "Waktu absensi tidak valid. Pagi: 08:00-15:00, Sore: 15:00-22:00",
+        });
+      }
     }
 
     // STEP 5: Validasi khusus untuk absen sore
