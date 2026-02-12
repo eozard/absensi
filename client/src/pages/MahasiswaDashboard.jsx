@@ -570,22 +570,23 @@ const MahasiswaDashboard = () => {
                       <td className="px-6 py-4">
                         <span
                           className={
-                            item.status === "approved"
+                            item.status_approval === "approved"
                               ? "badge-green"
-                              : item.status === "rejected"
+                              : item.status_approval === "rejected"
                                 ? "badge-red"
                                 : "badge-yellow"
                           }
                         >
-                          {item.status === "approved"
+                          {item.status_approval === "approved"
                             ? "Disetujui"
-                            : item.status === "rejected"
+                            : item.status_approval === "rejected"
                               ? "Ditolak"
                               : "Pending"}
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        {item.status === "pending" && (
+                        {(item.status_approval === "pending" ||
+                          !item.status_approval) && (
                           <button
                             onClick={() => handleCancelIzin(item.id)}
                             className="text-red-600 hover:text-red-800 text-sm font-medium"

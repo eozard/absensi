@@ -1206,22 +1206,23 @@ const AdminDashboard = () => {
                           <td className="px-6 py-4">
                             <span
                               className={
-                                izin.status === "approved"
+                                izin.status_approval === "approved"
                                   ? "badge-green"
-                                  : izin.status === "rejected"
+                                  : izin.status_approval === "rejected"
                                     ? "badge-red"
                                     : "badge-yellow"
                               }
                             >
-                              {izin.status === "approved"
+                              {izin.status_approval === "approved"
                                 ? "Disetujui"
-                                : izin.status === "rejected"
+                                : izin.status_approval === "rejected"
                                   ? "Ditolak"
                                   : "Pending"}
                             </span>
                           </td>
                           <td className="px-6 py-4">
-                            {izin.status === "pending" ? (
+                            {izin.status_approval === "pending" ||
+                            !izin.status_approval ? (
                               <div className="flex gap-2">
                                 <button
                                   onClick={() =>

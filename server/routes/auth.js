@@ -742,7 +742,7 @@ export const submitIzin = async (req, res) => {
     );
 
     // Insert izin ke tabel attendances
-    // Untuk izin: jam_masuk dan login_time bisa null
+    // Untuk izin: jam_masuk set ke dummy (00:00:00) dan login_time ke tanggal izin
     const { data, error } = await supabase
       .from("attendances")
       .insert({
@@ -751,8 +751,8 @@ export const submitIzin = async (req, res) => {
         tanggal: today,
         sesi: sesiIzin,
         status: "izin", // Status izin
-        jam_masuk: null, // Tidak ada jam masuk untuk izin
-        login_time: null, // Tidak ada login time untuk izin
+        jam_masuk: "00:00:00", // Dummy value untuk izin
+        login_time: new Date(today + "T00:00:00Z").toISOString(), // Dummy value
         keterangan,
         bukti_url: bukti_url || null,
         status_approval: "pending", // Default pending menunggu admin approve
