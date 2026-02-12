@@ -1138,7 +1138,7 @@ const AdminDashboard = () => {
         )}
 
         {/* Izin Tab */}
-{/* Report Tab */}
+        {/* Report Tab */}
         {activeTab === "report" && (
           <div className="space-y-4">
             {/* Filter Card */}
@@ -1261,45 +1261,108 @@ const AdminDashboard = () => {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                         Status
                       </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Aksi
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                     {reportData.length > 0 ? (
-                      reportData.map((item, idx) => (
-                        <tr key={idx} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 text-sm font-medium">
-                            {item.nama}
-                          </td>
-                          <td className="px-6 py-4 text-sm capitalize">
-                            {item.kelompok}
-                          </td>
-                          <td className="px-6 py-4 text-sm">
-                            {new Date(item.tanggal).toLocaleDateString("id-ID")}
-                          </td>
-                          <td className="px-6 py-4 text-sm capitalize font-medium">
-                            {item.sesi}
-                          </td>
-                          <td className="px-6 py-4 text-sm">
-                            {item.jam_masuk}
-                          </td>
-                          <td className="px-6 py-4">
-                            <span
-                              className={
-                                item.status === "hadir"
-                                  ? "badge-green"
-                                  : "badge-red"
-                              }
-                            >
-                              {item.status.charAt(0).toUpperCase() +
-                                item.status.slice(1)}
-                            </span>
-                          </td>
-                        </tr>
-                      ))
+                      reportData.map((item, idx) => {
+                        const normalizedApproval = (item.status_approval || "")
+                          .toLowerCase()
+                          .trim();
+                        const isIzin = item.status === "izin";
+                        const approvalLabel =
+                          normalizedApproval === "approved"
+                            ? "Izin Disetujui"
+                            : normalizedApproval === "rejected"
+                              ? "Izin Ditolak"
+                              : "Izin Pending";
+
+                        return (
+                          <tr key={idx} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 text-sm font-medium">
+                              {item.nama}
+                            </td>
+                            <td className="px-6 py-4 text-sm capitalize">
+                              {item.kelompok}
+                            </td>
+                            <td className="px-6 py-4 text-sm">
+                              {new Date(item.tanggal).toLocaleDateString(
+                                "id-ID",
+                              )}
+                            </td>
+                            <td className="px-6 py-4 text-sm capitalize font-medium">
+                              {item.sesi}
+                            </td>
+                            <td className="px-6 py-4 text-sm">
+                              {item.jam_masuk}
+                            </td>
+                            <td className="px-6 py-4">
+                              <span
+                                className={
+                                  isIzin
+                                    ? normalizedApproval === "approved"
+                                      ? "badge-green"
+                                      : normalizedApproval === "rejected"
+                                        ? "badge-red"
+                                        : "badge-yellow"
+                                    : item.status === "hadir"
+                                      ? "badge-green"
+                                      : "badge-red"
+                                }
+                              >
+                                {isIzin
+                                  ? approvalLabel
+                                  : item.status.charAt(0).toUpperCase() +
+                                    item.status.slice(1)}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              {item.status === "izin" ? (
+                                normalizedApproval === "approved" ||
+                                normalizedApproval === "rejected" ? (
+                                  <span className="text-sm text-gray-500">
+                                    {item.approved_by
+                                      ? `oleh ${item.approved_by}`
+                                      : "-"}
+                                  </span>
+                                ) : (
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() =>
+                                        handleUpdateIzin(item.id, "approved")
+                                      }
+                                      className="text-green-600 hover:text-green-800 text-sm font-medium flex items-center"
+                                      title="Setujui"
+                                    >
+                                      <CheckCircle className="w-4 h-4 mr-1" />
+                                      Setujui
+                                    </button>
+                                    <button
+                                      onClick={() =>
+                                        handleUpdateIzin(item.id, "rejected")
+                                      }
+                                      className="text-red-600 hover:text-red-800 text-sm font-medium flex items-center"
+                                      title="Tolak"
+                                    >
+                                      <XCircle className="w-4 h-4 mr-1" />
+                                      Tolak
+                                    </button>
+                                  </div>
+                                )
+                              ) : (
+                                <span className="text-sm text-gray-400">-</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })
                     ) : (
                       <tr>
                         <td
-                          colSpan="6"
+                          colSpan="7"
                           className="px-6 py-4 text-center text-gray-500"
                         >
                           Klik "Filter" untuk menampilkan data
@@ -1314,7 +1377,9 @@ const AdminDashboard = () => {
             {/* Izin Data Card dalam Report Tab */}
             <div className="card">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold">📋 Data Izin ({izinList.length})</h2>
+                <h2 className="text-xl font-bold">
+                  📋 Data Izin ({izinList.length})
+                </h2>
                 <button
                   onClick={fetchIzinData}
                   className="btn-secondary flex items-center"
@@ -1363,75 +1428,83 @@ const AdminDashboard = () => {
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {izinList.length > 0 ? (
-                        izinList.map((izin) => (
-                          <tr key={izin.id}>
-                            <td className="px-6 py-4 text-sm font-medium">
-                              {izin.nama}
-                            </td>
-                            <td className="px-6 py-4 text-sm text-gray-600">
-                              {izin.kelompok}
-                            </td>
-                            <td className="px-6 py-4 text-sm">
-                              {new Date(izin.tanggal).toLocaleDateString("id-ID")}
-                            </td>
-                            <td className="px-6 py-4 text-sm capitalize">
-                              {izin.sesi}
-                            </td>
-                            <td className="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">
-                              {izin.keterangan}
-                            </td>
-                            <td className="px-6 py-4">
-                              <span
-                                className={
-                                  izin.status_approval === "approved"
-                                    ? "badge-green"
-                                    : izin.status_approval === "rejected"
-                                      ? "badge-red"
-                                      : "badge-yellow"
-                                }
-                              >
-                                {izin.status_approval === "approved"
-                                  ? "Disetujui"
-                                  : izin.status_approval === "rejected"
-                                    ? "Ditolak"
-                                    : "Pending"}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4">
-                              {izin.status_approval === "pending" ||
-                              !izin.status_approval ? (
-                                <div className="flex gap-2">
-                                  <button
-                                    onClick={() =>
-                                      handleUpdateIzin(izin.id, "approved")
-                                    }
-                                    className="text-green-600 hover:text-green-800 text-sm font-medium flex items-center"
-                                    title="Setujui"
-                                  >
-                                    <CheckCircle className="w-4 h-4 mr-1" />
-                                    Setujui
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      handleUpdateIzin(izin.id, "rejected")
-                                    }
-                                    className="text-red-600 hover:text-red-800 text-sm font-medium flex items-center"
-                                    title="Tolak"
-                                  >
-                                    <XCircle className="w-4 h-4 mr-1" />
-                                    Tolak
-                                  </button>
-                                </div>
-                              ) : (
-                                <span className="text-sm text-gray-500">
-                                  {izin.approved_by
-                                    ? `oleh ${izin.approved_by}`
-                                    : "-"}
+                        izinList.map((izin) => {
+                          const normalizedStatus = (izin.status_approval || "")
+                            .toLowerCase()
+                            .trim();
+
+                          return (
+                            <tr key={izin.id}>
+                              <td className="px-6 py-4 text-sm font-medium">
+                                {izin.nama}
+                              </td>
+                              <td className="px-6 py-4 text-sm text-gray-600">
+                                {izin.kelompok}
+                              </td>
+                              <td className="px-6 py-4 text-sm">
+                                {new Date(izin.tanggal).toLocaleDateString(
+                                  "id-ID",
+                                )}
+                              </td>
+                              <td className="px-6 py-4 text-sm capitalize">
+                                {izin.sesi}
+                              </td>
+                              <td className="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">
+                                {izin.keterangan}
+                              </td>
+                              <td className="px-6 py-4">
+                                <span
+                                  className={
+                                    normalizedStatus === "approved"
+                                      ? "badge-green"
+                                      : normalizedStatus === "rejected"
+                                        ? "badge-red"
+                                        : "badge-yellow"
+                                  }
+                                >
+                                  {normalizedStatus === "approved"
+                                    ? "Disetujui"
+                                    : normalizedStatus === "rejected"
+                                      ? "Ditolak"
+                                      : "Pending"}
                                 </span>
-                              )}
-                            </td>
-                          </tr>
-                        ))
+                              </td>
+                              <td className="px-6 py-4">
+                                {normalizedStatus !== "approved" &&
+                                normalizedStatus !== "rejected" ? (
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() =>
+                                        handleUpdateIzin(izin.id, "approved")
+                                      }
+                                      className="text-green-600 hover:text-green-800 text-sm font-medium flex items-center"
+                                      title="Setujui"
+                                    >
+                                      <CheckCircle className="w-4 h-4 mr-1" />
+                                      Setujui
+                                    </button>
+                                    <button
+                                      onClick={() =>
+                                        handleUpdateIzin(izin.id, "rejected")
+                                      }
+                                      className="text-red-600 hover:text-red-800 text-sm font-medium flex items-center"
+                                      title="Tolak"
+                                    >
+                                      <XCircle className="w-4 h-4 mr-1" />
+                                      Tolak
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <span className="text-sm text-gray-500">
+                                    {izin.approved_by
+                                      ? `oleh ${izin.approved_by}`
+                                      : "-"}
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })
                       ) : (
                         <tr>
                           <td

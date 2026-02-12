@@ -735,7 +735,31 @@ export const submitIzin = async (req, res) => {
     }
 
     const today = new Date().toISOString().split("T")[0];
-    const sesiIzin = sesi || "harian"; // Default harian jika tidak spesifik sesi
+
+    // Batasi izin maksimal 2x per hari (sesi: izin-1, izin-2)
+    const { data: existingIzin } = await supabase
+      .from("attendances")
+      .select("sesi")
+      .eq("nama", nama)
+      .eq("tanggal", today)
+      .eq("status", "izin");
+
+    const existingSessions = existingIzin?.map((a) => a.sesi) || [];
+    const allowedSessions = ["izin-1", "izin-2"];
+    let sesiIzin = sesi;
+
+    if (existingSessions.length >= allowedSessions.length) {
+      return res.status(400).json({
+        success: false,
+        message: "Maksimal izin 2x per hari",
+      });
+    }
+
+    if (!sesiIzin || !allowedSessions.includes(sesiIzin)) {
+      sesiIzin = allowedSessions.find(
+        (session) => !existingSessions.includes(session),
+      );
+    }
 
     console.log(
       `📝 Submit izin: ${nama} untuk ${today} (sesi: ${sesiIzin}, alasan: ${keterangan})`,
@@ -762,9 +786,10 @@ export const submitIzin = async (req, res) => {
 
     if (error) {
       console.error("Submit izin error:", error.message);
-      return res
-        .status(500)
-        .json({ success: false, message: "Database error" });
+      return res.status(500).json({
+        success: false,
+        message: `Database error: ${error.message}`,
+      });
     }
 
     console.log(`✅ Izin berhasil disubmit untuk ${nama}`);
