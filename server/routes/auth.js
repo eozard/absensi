@@ -456,9 +456,9 @@ export const absen = async (req, res) => {
     // Sore: 15:00 - 18:00 (900 menit - 1080 menit)
     let sesi;
     const pagiStart = 8 * 60; // 08:00 = 480 menit
-    const pagiEnd = 18 * 60 + 40; // 14:40 = 880 menit
-    const soreStart = 18 * 60; // 15:00 = 900 menit
-    const soreEnd = 20 * 60; // 18:00 = 1080 menit
+    const pagiEnd = 20 * 60 + 40; // 14:40 = 880 menit
+    const soreStart = 20 * 60; // 15:00 = 900 menit
+    const soreEnd = 23 * 60; // 18:00 = 1080 menit
 
     if (timeInMinutes >= pagiStart && timeInMinutes <= pagiEnd) {
       sesi = "pagi";
