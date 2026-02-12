@@ -61,7 +61,7 @@ const AdminDashboard = () => {
   const [izinList, setIzinList] = useState([]);
   const [izinLoading, setIzinLoading] = useState(false);
   const [confirmState, setConfirmState] = useState(null);
-  // Notifikasi toast untuk feedback user
+  // Notifikasi toast untuk feedback users
   const { toasts, pushToast, dismissToast } = useToast();
   const navigate = useNavigate();
 

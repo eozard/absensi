@@ -14,7 +14,7 @@
  * 2. Menyimpan data absensi (tabel: absensi)
  * 3. Menyimpan data izin (tabel: izin)
  * 4. Menyimpan binding device (tabel: device_bindings)
- *
+ *a
  * CARA KERJA:
  * 1. Load file .env untuk mendapatkan credentials Supabase
  * 2. Pilih service role key jika tersedia (untuk operasi admin)

@@ -21,7 +21,7 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      // Get device ID (persistent dari fingerprint.js)
+      // Get device ID (persistent dari fingerprint.js)a
       const deviceId = getDeviceIdSync();
 
       const response = await axiosInstance.post("/login", {

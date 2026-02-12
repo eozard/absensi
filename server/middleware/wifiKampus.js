@@ -10,7 +10,7 @@
  * - Memastikan siswa benar-benar datang ke sekolah saat absen
  * - Meningkatkan validitas data kehadiran
  *
- * CARA KERJA:
+ * CARA KERJA:a
  * 1. Extract IP address dari HTTP headers (support proxy/load balancer)
  * 2. Validasi IP address dengan regex pattern (103.209.9.*)
  * 3. Tolak request jika IP tidak match dengan WiFi sekolah

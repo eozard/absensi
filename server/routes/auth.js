@@ -66,7 +66,7 @@ const getJWTSecret = () => {
  *    a. Simpan device ke kolom users.devices (JSONB array)
  *    b. Insert/update ke tabel device_bindings
  * 5. Generate JWT token dan return ke client
- *
+ *s
  * KEAMANAN:
  * - Admin tidak dibatasi device (bisa login dari device apapun)
  * - Mahasiswa max 2-3 device (sesuai users.max_devices)
@@ -456,9 +456,9 @@ export const absen = async (req, res) => {
     // Sore: 15:00 - 18:00 (900 menit - 1080 menit)
     let sesi;
     const pagiStart = 8 * 60; // 08:00 = 480 menit
-    const pagiEnd = 14 * 60 + 40; // 14:40 = 880 menit
-    const soreStart = 15 * 60; // 15:00 = 900 menit
-    const soreEnd = 18 * 60; // 18:00 = 1080 menit
+    const pagiEnd = 18 * 60 + 40; // 14:40 = 880 menit
+    const soreStart = 18 * 60; // 15:00 = 900 menit
+    const soreEnd = 20 * 60; // 18:00 = 1080 menit
 
     if (timeInMinutes >= pagiStart && timeInMinutes <= pagiEnd) {
       sesi = "pagi";

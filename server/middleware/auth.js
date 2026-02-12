@@ -41,7 +41,7 @@ const getJWTSecret = () => {
  * ============================================================================
  * Fungsi: Memvalidasi JWT token yang dikirim client di header request
  *
- * CARA KERJA:
+ * CARA KERJA:s
  * 1. Ambil header Authorization dari request
  * 2. Pastikan format: "Bearer <token>"
  * 3. Extract token (substring dari karakter ke-7 untuk skip "Bearer ")
