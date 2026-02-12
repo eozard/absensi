@@ -597,7 +597,9 @@ export const updateIzinStatus = async (req, res) => {
       });
     }
 
-    console.log(`✅ Izin ${id} berhasil ${status === "approved" ? "disetujui" : "ditolak"}`);
+    console.log(
+      `✅ Izin ${id} berhasil ${status === "approved" ? "disetujui" : "ditolak"}`,
+    );
 
     return res.json({
       success: true,
