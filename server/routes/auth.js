@@ -451,7 +451,7 @@ export const absen = async (req, res) => {
     const minute = jakartaTime.getMinutes();
     const timeInMinutes = hour * 60 + minute; // Convert ke total menit untuk mudah compare
 
-    // STEP 4: Tentukan sesi berdasarkan waktu
+    // STEP 4: Tentukan sesi berdasarkan waktu atau status absen pagi
     // Pagi: 08:00 - 15:00 (480 menit - 900 menit)
     // Sore: 15:00 - 22:00 (900 menit - 1320 menit)
     let sesi;
@@ -459,14 +459,27 @@ export const absen = async (req, res) => {
     const pagiEnd = 15 * 60; // 15:00 = 900 menit
     const soreStart = 15 * 60; // 15:00 = 900 menit
     const soreEnd = 22 * 60; // 22:00 = 1320 menit
+    const today = loginDateTime.toISOString().split("T")[0]; // Format: YYYY-MM-DD
 
     // Check apakah time validation di-bypass (development mode)
-    // Jika BYPASS_TIME_CHECK=true, default ke sesi "pagi"
+    // Jika BYPASS_TIME_CHECK=true, tentukan sesi berdasarkan apakah sudah absen pagi
     if (process.env.BYPASS_TIME_CHECK === "true") {
+      console.log("⏰ Time check bypassed (development mode)");
+
+      // Cek apakah sudah absen pagi hari ini
+      const { data: pagiAttendance } = await supabase
+        .from("attendances")
+        .select("*")
+        .eq("nama", nama)
+        .eq("tanggal", today)
+        .eq("sesi", "pagi");
+
+      // Jika sudah ada absen pagi hari ini → set sesi sore
+      // Jika belum ada → set sesi pagi
+      sesi = pagiAttendance && pagiAttendance.length > 0 ? "sore" : "pagi";
       console.log(
-        "⏰ Time check bypassed (development mode) - defaulting to pagi",
+        `📝 Bypass mode: Sesi otomatis set ke "${sesi}" (sudah absen pagi: ${pagiAttendance && pagiAttendance.length > 0})`,
       );
-      sesi = "pagi"; // Default ke pagi untuk testing
     } else {
       // Mode production: validasi jam normal
       if (timeInMinutes >= pagiStart && timeInMinutes <= pagiEnd) {
@@ -485,9 +498,8 @@ export const absen = async (req, res) => {
 
     // STEP 5: Validasi khusus untuk absen sore
     // Harus sudah absen pagi + jeda minimal 6 jam (exclude istirahat)
+    // Aturan ini TETAP BERLAKU bahkan saat bypass time
     if (sesi === "sore") {
-      const today = loginDateTime.toISOString().split("T")[0]; // Format: YYYY-MM-DD
-
       // Cek apakah sudah absen pagi hari ini
       const { data: pagiAttendance, error: pagiError } = await supabase
         .from("attendances")
@@ -555,7 +567,6 @@ export const absen = async (req, res) => {
     }
 
     // STEP 6: Cek duplikat absen (tidak boleh absen 2x untuk sesi yang sama)
-    const today = loginDateTime.toISOString().split("T")[0];
     const { data: existingAttendance, error: existingError } = await supabase
       .from("attendances")
       .select("*")
