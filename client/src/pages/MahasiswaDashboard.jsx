@@ -584,21 +584,28 @@ const MahasiswaDashboard = () => {
                       </td>
                       <td className="px-6 py-4 text-sm">{item.keterangan}</td>
                       <td className="px-6 py-4">
-                        <span
-                          className={
-                            item.status_approval === "approved"
+                        {(() => {
+                          const status = (item.status_approval || "")
+                            .toLowerCase()
+                            .trim();
+                          const badgeClass =
+                            status === "approved"
                               ? "badge-green"
-                              : item.status_approval === "rejected"
+                              : status === "rejected"
                                 ? "badge-red"
-                                : "badge-yellow"
-                          }
-                        >
-                          {item.status_approval === "approved"
-                            ? "Disetujui"
-                            : item.status_approval === "rejected"
-                              ? "Ditolak"
-                              : "Pending"}
-                        </span>
+                                : status === "cancelled"
+                                  ? "badge-blue"
+                                  : "badge-yellow";
+                          const label =
+                            status === "approved"
+                              ? "Disetujui"
+                              : status === "rejected"
+                                ? "Ditolak"
+                                : status === "cancelled"
+                                  ? "Dibatalkan"
+                                  : "Pending";
+                          return <span className={badgeClass}>{label}</span>;
+                        })()}
                       </td>
                       <td className="px-6 py-4">
                         {(item.status_approval === "pending" ||

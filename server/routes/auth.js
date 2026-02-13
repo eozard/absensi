@@ -695,7 +695,7 @@ export const getIzin = async (req, res) => {
 };
 
 // DELETE /api/izin/:id - Batalkan izin (hanya pending)
-// Hapus record izin dari tabel attendances
+// Tandai izin sebagai dibatalkan agar kuota harian tetap dihitung
 export const cancelIzin = async (req, res) => {
   try {
     const { nama } = req.user;
@@ -725,14 +725,18 @@ export const cancelIzin = async (req, res) => {
       });
     }
 
-    // Delete izin dari attendances
-    const { error: deleteError } = await supabase
+    // Update status izin jadi cancelled (tetap dihitung untuk limit harian)
+    const { error: updateError } = await supabase
       .from("attendances")
-      .delete()
+      .update({
+        status_approval: "cancelled",
+        approved_by: nama,
+        approved_at: new Date().toISOString(),
+      })
       .eq("id", id);
 
-    if (deleteError) {
-      console.error("Delete izin error:", deleteError.message);
+    if (updateError) {
+      console.error("Update izin cancel error:", updateError.message);
       return res
         .status(500)
         .json({ success: false, message: "Database error" });

@@ -1278,7 +1278,9 @@ const AdminDashboard = () => {
                             ? "Izin Disetujui"
                             : normalizedApproval === "rejected"
                               ? "Izin Ditolak"
-                              : "Izin Pending";
+                              : normalizedApproval === "cancelled"
+                                ? "Izin Dibatalkan"
+                                : "Izin Pending";
 
                         return (
                           <tr key={idx} className="hover:bg-gray-50">
@@ -1307,7 +1309,9 @@ const AdminDashboard = () => {
                                       ? "badge-green"
                                       : normalizedApproval === "rejected"
                                         ? "badge-red"
-                                        : "badge-yellow"
+                                        : normalizedApproval === "cancelled"
+                                          ? "badge-blue"
+                                          : "badge-yellow"
                                     : item.status === "hadir"
                                       ? "badge-green"
                                       : "badge-red"
@@ -1322,7 +1326,8 @@ const AdminDashboard = () => {
                             <td className="px-6 py-4">
                               {item.status === "izin" ? (
                                 normalizedApproval === "approved" ||
-                                normalizedApproval === "rejected" ? (
+                                normalizedApproval === "rejected" ||
+                                normalizedApproval === "cancelled" ? (
                                   <span className="text-sm text-gray-500">
                                     {item.approved_by
                                       ? `oleh ${item.approved_by}`
@@ -1459,19 +1464,24 @@ const AdminDashboard = () => {
                                       ? "badge-green"
                                       : normalizedStatus === "rejected"
                                         ? "badge-red"
-                                        : "badge-yellow"
+                                        : normalizedStatus === "cancelled"
+                                          ? "badge-blue"
+                                          : "badge-yellow"
                                   }
                                 >
                                   {normalizedStatus === "approved"
                                     ? "Disetujui"
                                     : normalizedStatus === "rejected"
                                       ? "Ditolak"
-                                      : "Pending"}
+                                      : normalizedStatus === "cancelled"
+                                        ? "Dibatalkan"
+                                        : "Pending"}
                                 </span>
                               </td>
                               <td className="px-6 py-4">
                                 {normalizedStatus !== "approved" &&
-                                normalizedStatus !== "rejected" ? (
+                                normalizedStatus !== "rejected" &&
+                                normalizedStatus !== "cancelled" ? (
                                   <div className="flex gap-2">
                                     <button
                                       onClick={() =>
