@@ -56,6 +56,7 @@ const AdminDashboard = () => {
       .split("T")[0],
     toDate: new Date().toISOString().split("T")[0],
     kelompok: "all",
+    nama: "all",
   });
   // State daftar izin
   const [izinList, setIzinList] = useState([]);
@@ -397,6 +398,7 @@ const AdminDashboard = () => {
         fromDate: reportFilters.fromDate,
         toDate: reportFilters.toDate,
         kelompok: reportFilters.kelompok,
+        nama: reportFilters.nama,
       });
 
       const response = await axiosInstance.get(`/admin/report?${params}`);
@@ -929,7 +931,7 @@ const AdminDashboard = () => {
 
             <div className="card">
               <h2 className="text-xl font-bold mb-4">🔒 Reset Password User</h2>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
                 <div>
                   <label className="block text-sm font-medium mb-1">User</label>
                   <select
@@ -1203,6 +1205,29 @@ const AdminDashboard = () => {
                     {kelompokOptions.map((k) => (
                       <option key={k} value={k}>
                         {k}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Siswa
+                  </label>
+                  <select
+                    className="input-field"
+                    value={reportFilters.nama}
+                    onChange={(e) =>
+                      setReportFilters({
+                        ...reportFilters,
+                        nama: e.target.value,
+                      })
+                    }
+                  >
+                    <option value="all">Semua Siswa</option>
+                    {students.map((student) => (
+                      <option key={student.nama} value={student.nama}>
+                        {student.nama}
                       </option>
                     ))}
                   </select>

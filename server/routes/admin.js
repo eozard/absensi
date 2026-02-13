@@ -553,10 +553,10 @@ export const createUser = async (req, res) => {
 // GET /api/admin/report - filtered attendance report
 export const getAttendanceReport = async (req, res) => {
   try {
-    const { fromDate, toDate, kelompok } = req.query;
+    const { fromDate, toDate, kelompok, nama } = req.query;
 
     console.log(
-      `📊 Get report: ${fromDate} to ${toDate}, kelompok: ${kelompok}`,
+      `📊 Get report: ${fromDate} to ${toDate}, kelompok: ${kelompok}, nama: ${nama}`,
     );
 
     let query = supabase
@@ -576,6 +576,11 @@ export const getAttendanceReport = async (req, res) => {
     // Apply kelompok filter
     if (kelompok && kelompok !== "all") {
       query = query.eq("kelompok", kelompok);
+    }
+
+    // Apply nama filter
+    if (nama && nama !== "all") {
+      query = query.eq("nama", nama);
     }
 
     const { data: attendances, error } = await query;
