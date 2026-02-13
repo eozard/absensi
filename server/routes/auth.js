@@ -386,8 +386,8 @@ export const login = async (req, res) => {
  * }
  *
  * ATURAN ABSENSI:
- * 1. WAKTU PAGI: 08:00 - 15:00
- * 2. WAKTU SORE: 15:00 - 22:00
+ * 1. WAKTU PAGI: 08:00 - 10:00
+ * 2. WAKTU SORE: 15:00 - 17:00
  * 3. Absen sore harus sudah absen pagi terlebih dahulu
  * 4. Jeda minimal antara absen pagi-sore: 6 jam (exclude waktu istirahat 12:00-13:00)
  * 5. Device harus terdaftar (ada di device_bindings)
@@ -452,13 +452,13 @@ export const absen = async (req, res) => {
     const timeInMinutes = hour * 60 + minute; // Convert ke total menit untuk mudah compare
 
     // STEP 4: Tentukan sesi berdasarkan waktu atau status absen pagi
-    // Pagi: 08:00 - 15:00 (480 menit - 900 menit)
-    // Sore: 15:00 - 22:00 (900 menit - 1320 menit)
+    // Pagi: 08:00 - 10:00 (480 menit - 600 menit)
+    // Sore: 15:00 - 17:00 (900 menit - 1020 menit)
     let sesi;
     const pagiStart = 8 * 60; // 08:00 = 480 menit
-    const pagiEnd = 15 * 60; // 15:00 = 900 menit
+    const pagiEnd = 10 * 60; // 10:00 = 600 menit
     const soreStart = 15 * 60; // 15:00 = 900 menit
-    const soreEnd = 22 * 60; // 22:00 = 1320 menit
+    const soreEnd = 17 * 60; // 17:00 = 1020 menit
     const today = loginDateTime.toISOString().split("T")[0]; // Format: YYYY-MM-DD
 
     // Check apakah time validation di-bypass (development mode)
@@ -491,7 +491,7 @@ export const absen = async (req, res) => {
         return res.status(403).json({
           success: false,
           message:
-            "Waktu absensi tidak valid. Pagi: 08:00-15:00, Sore: 15:00-22:00",
+            "Waktu absensi tidak valid. Pagi: 08:00-10:00, Sore: 15:00-17:00",
         });
       }
     }
