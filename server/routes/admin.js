@@ -220,24 +220,81 @@ export const getDevices = async (req, res) => {
 };
 
 // DELETE /api/admin/devices/:deviceId
-// Hapus ikatan device tertentu
+// Hapus ikatan device tertentu dari device_bindings dan users.devices array
 export const deleteDevice = async (req, res) => {
   try {
     const { deviceId } = req.params;
 
     console.log(`🗑️ Delete device: ${deviceId}`);
 
-    const { error } = await supabase
+    // STEP 1: Cari user yang punya device ini
+    const { data: deviceBinding, error: bindingError } = await supabase
+      .from("device_bindings")
+      .select("user_name")
+      .eq("device_id", deviceId)
+      .single();
+
+    if (bindingError || !deviceBinding) {
+      console.error("Device binding not found:", bindingError?.message);
+      return res.status(404).json({
+        success: false,
+        message: "Device tidak ditemukan",
+      });
+    }
+
+    const userName = deviceBinding.user_name;
+
+    // STEP 2: Hapus dari device_bindings
+    const { error: deleteBindingError } = await supabase
       .from("device_bindings")
       .delete()
       .eq("device_id", deviceId);
 
-    if (error) {
-      console.error("Delete device error:", error.message);
-      return res
-        .status(500)
-        .json({ success: false, message: "Database error" });
+    if (deleteBindingError) {
+      console.error("Delete device_bindings error:", deleteBindingError.message);
+      return res.status(500).json({
+        success: false,
+        message: "Database error",
+      });
     }
+
+    // STEP 3: Hapus dari users.devices array
+    const { data: user, error: userError } = await supabase
+      .from("users")
+      .select("devices")
+      .eq("nama", userName)
+      .single();
+
+    if (userError || !user) {
+      console.error("User not found:", userError?.message);
+      return res.status(404).json({
+        success: false,
+        message: "User tidak ditemukan",
+      });
+    }
+
+    // Filter device yang TIDAK sama dengan deviceId yang dihapus
+    const updatedDevices = (user.devices || []).filter(
+      (d) => d.deviceId !== deviceId,
+    );
+
+    // Update users.devices dengan array yang sudah difilter
+    const { error: updateError } = await supabase
+      .from("users")
+      .update({ devices: updatedDevices })
+      .eq("nama", userName);
+
+    if (updateError) {
+      console.error("Update users.devices error:", updateError.message);
+      return res.status(500).json({
+        success: false,
+        message: "Database error",
+      });
+    }
+
+    console.log(
+      `✅ Device ${deviceId} dihapus dari ${userName} (slot dari ${user.devices.length} → ${updatedDevices.length})`,
+    );
 
     return res.json({
       success: true,
