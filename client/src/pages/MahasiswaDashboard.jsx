@@ -79,8 +79,20 @@ const MahasiswaDashboard = () => {
       const soreStart = 15 * 60;
       const soreEnd = 17 * 60;
 
-      setCanAbsenPagi(timeInMinutes >= pagiStart && timeInMinutes <= pagiEnd);
-      setCanAbsenSore(timeInMinutes >= soreStart && timeInMinutes <= soreEnd);
+      // DEVELOPMENT: Untuk test/trial and error, gunakan env Vite untuk unlock tombol
+      // Backend tetap akan validate dengan BYPASS_TIME_CHECK=true
+      const bypassMode = import.meta.env.VITE_BYPASS_TIME_CHECK === "true";
+
+      if (bypassMode) {
+        // Mode bypass: selalu allow absen
+        setCanAbsenPagi(true);
+        setCanAbsenSore(true);
+        console.log("🔄 Frontend bypass mode ON - selalu allow absen");
+      } else {
+        // Mode normal: validasi jam ketat
+        setCanAbsenPagi(timeInMinutes >= pagiStart && timeInMinutes <= pagiEnd);
+        setCanAbsenSore(timeInMinutes >= soreStart && timeInMinutes <= soreEnd);
+      }
 
       // Calculate time remaining (10 min window)
       const nextHour = hours + 1;

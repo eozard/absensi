@@ -445,7 +445,11 @@ export const absen = async (req, res) => {
 
     // STEP 3: Parse dan konversi waktu ke timezone Jakarta (UTC+7)
     // Date yang dikirim client biasanya dalam UTC, perlu convert ke WIB
-    const loginDateTime = new Date(login_time);
+    const normalizeIso = (value) => {
+      if (!value) return value;
+      return /Z$|[+-]\d{2}:\d{2}$/.test(value) ? value : `${value}Z`;
+    };
+    const loginDateTime = new Date(normalizeIso(login_time));
     const jakartaTime = new Date(loginDateTime.getTime() + 7 * 60 * 60 * 1000); // +7 jam
     const hour = jakartaTime.getHours();
     const minute = jakartaTime.getMinutes();
@@ -498,7 +502,6 @@ export const absen = async (req, res) => {
 
     // STEP 5: Validasi khusus untuk absen sore
     // Harus sudah absen pagi + jeda minimal 6 jam (exclude istirahat)
-    // TAPI jika BYPASS_TIME_CHECK=true, bypass aturan 6 jam (hanya wajib pagi dulu)
     if (sesi === "sore") {
       // Cek apakah sudah absen pagi hari ini
       const { data: pagiAttendance, error: pagiError } = await supabase
@@ -506,7 +509,9 @@ export const absen = async (req, res) => {
         .select("*")
         .eq("nama", nama)
         .eq("tanggal", today)
-        .eq("sesi", "pagi");
+        .eq("sesi", "pagi")
+        .order("login_time", { ascending: false })
+        .limit(1);
 
       if (pagiError) {
         console.error("Pagi attendance check error:", pagiError.message);
@@ -523,12 +528,26 @@ export const absen = async (req, res) => {
         });
       }
 
-      // Jika BYPASS_TIME_CHECK=true, skip aturan 6 jam
-      if (process.env.BYPASS_TIME_CHECK !== "true") {
+      const bypassJedaCheck = process.env.BYPASS_JEDA_CHECK === "true";
+
+      if (!bypassJedaCheck) {
         // Hitung jeda waktu antara absen pagi dan sore
         // Exclude waktu istirahat (12:00-13:00) dari hitungan
-        const pagiLoginTime = new Date(pagiAttendance[0].login_time);
+        const pagiLoginTime = new Date(
+          normalizeIso(pagiAttendance[0].login_time),
+        );
         const diffMinutesRaw = (loginDateTime - pagiLoginTime) / (1000 * 60); // Selisih dalam menit
+
+        if (!Number.isFinite(diffMinutesRaw)) {
+          console.warn("⚠️ Invalid time diff for 6-hour check", {
+            login_time,
+            pagi_login_time: pagiAttendance[0].login_time,
+          });
+          return res.status(400).json({
+            success: false,
+            message: "Data waktu absen tidak valid",
+          });
+        }
 
         // Convert ke Jakarta time untuk hitung overlap waktu istirahat
         const pagiJakarta = new Date(
@@ -559,6 +578,13 @@ export const absen = async (req, res) => {
         const effectiveDiffMinutes = diffMinutesRaw - overlapMinutes;
         const diffHours = effectiveDiffMinutes / 60;
 
+        console.log("⏱️ Jeda check", {
+          bypassJedaCheck,
+          login_time,
+          pagi_login_time: pagiAttendance[0].login_time,
+          diffHours,
+        });
+
         // Tolak jika jeda kurang dari 6 jam
         if (diffHours < 6) {
           return res.status(403).json({
@@ -567,7 +593,7 @@ export const absen = async (req, res) => {
           });
         }
       } else {
-        console.log("⏰ 6-hour jeda rule bypassed (BYPASS_TIME_CHECK=true)");
+        console.log("⏰ 6-hour jeda rule bypassed (BYPASS_JEDA_CHECK=true)");
       }
     }
 

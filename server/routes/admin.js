@@ -251,7 +251,10 @@ export const deleteDevice = async (req, res) => {
       .eq("device_id", deviceId);
 
     if (deleteBindingError) {
-      console.error("Delete device_bindings error:", deleteBindingError.message);
+      console.error(
+        "Delete device_bindings error:",
+        deleteBindingError.message,
+      );
       return res.status(500).json({
         success: false,
         message: "Database error",
@@ -314,7 +317,7 @@ export const getUsers = async (req, res) => {
 
     const { data: users, error } = await supabase
       .from("users")
-      .select("id, nama, role, kelompok, devices")
+      .select("id, nama, role, kelompok, devices, max_devices")
       .order("nama", { ascending: true });
 
     if (error) {
@@ -324,10 +327,27 @@ export const getUsers = async (req, res) => {
         .json({ success: false, message: "Database error" });
     }
 
+    const { data: deviceBindings, error: deviceError } = await supabase
+      .from("device_bindings")
+      .select("user_name");
+
+    if (deviceError) {
+      console.error("Get device bindings error:", deviceError.message);
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error" });
+    }
+
+    const deviceCounts = (deviceBindings || []).reduce((acc, binding) => {
+      if (!binding.user_name) return acc;
+      acc[binding.user_name] = (acc[binding.user_name] || 0) + 1;
+      return acc;
+    }, {});
+
     // Transform to add devices_count
     const formattedUsers = (users || []).map((user) => ({
       ...user,
-      devices_count: user.devices ? user.devices.length : 0,
+      devices_count: deviceCounts[user.nama] || 0,
     }));
 
     return res.json({
