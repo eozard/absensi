@@ -531,8 +531,6 @@ const AdminDashboard = () => {
         matchesSearch &&
         (item.pagi?.status === "hadir" || item.sore?.status === "hadir")
       );
-    } else if (filter === "alpa") {
-      return matchesSearch && !item.pagi && !item.sore;
     }
     return matchesSearch;
   });
@@ -633,6 +631,9 @@ const AdminDashboard = () => {
                   <p className="text-3xl font-bold text-green-600">
                     {stats.hadirToday}
                   </p>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Pagi: {stats.hadirPagi} | Sore: {stats.hadirSore}
+                  </p>
                 </div>
                 <CheckCircle className="w-12 h-12 text-green-600" />
               </div>
@@ -641,12 +642,12 @@ const AdminDashboard = () => {
             <div className="card">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Alpa Hari Ini</p>
-                  <p className="text-3xl font-bold text-red-600">
-                    {stats.alpaToday}
+                  <p className="text-sm text-gray-600">Izin Hari Ini</p>
+                  <p className="text-3xl font-bold text-yellow-600">
+                    {stats.izinToday}
                   </p>
                 </div>
-                <XCircle className="w-12 h-12 text-red-600" />
+                <Calendar className="w-12 h-12 text-yellow-600" />
               </div>
             </div>
           </div>
@@ -756,7 +757,6 @@ const AdminDashboard = () => {
                 >
                   <option value="all">Semua</option>
                   <option value="hadir">Hadir</option>
-                  <option value="alpa">Alpa</option>
                 </select>
 
                 <button

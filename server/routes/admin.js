@@ -25,22 +25,43 @@ export const getStats = async (req, res) => {
       .select("id")
       .eq("role", "anak_smk");
 
-    // Hadir hari ini
+    // Hadir hari ini per sesi
     const today = new Date().toISOString().split("T")[0];
+    const { data: hadirPagi, error: hadirPagiError } = await supabase
+      .from("attendances")
+      .select("id")
+      .eq("tanggal", today)
+      .eq("status", "hadir")
+      .eq("sesi", "pagi");
+
+    const { data: hadirSore, error: hadirSoreError } = await supabase
+      .from("attendances")
+      .select("id")
+      .eq("tanggal", today)
+      .eq("status", "hadir")
+      .eq("sesi", "sore");
+
     const { data: hadirToday, error: hadirError } = await supabase
       .from("attendances")
       .select("id")
       .eq("tanggal", today)
       .eq("status", "hadir");
 
-    // Alpa hari ini
-    const { data: alpaToday, error: alpaError } = await supabase
+    // Izin hari ini (pending + approved)
+    const { data: izinToday, error: izinError } = await supabase
       .from("attendances")
       .select("id")
       .eq("tanggal", today)
-      .eq("status", "alpa");
+      .eq("status", "izin");
 
-    if (mahasiswaError || anakSmkError || hadirError || alpaError) {
+    if (
+      mahasiswaError ||
+      anakSmkError ||
+      hadirError ||
+      hadirPagiError ||
+      hadirSoreError ||
+      izinError
+    ) {
       console.error("Stats error");
       return res
         .status(500)
@@ -53,7 +74,9 @@ export const getStats = async (req, res) => {
         totalMahasiswa: mahasiswa?.length || 0,
         totalAnakSmk: anakSmk?.length || 0,
         hadirToday: hadirToday?.length || 0,
-        alpaToday: alpaToday?.length || 0,
+        hadirPagi: hadirPagi?.length || 0,
+        hadirSore: hadirSore?.length || 0,
+        izinToday: izinToday?.length || 0,
       },
     });
   } catch (error) {
