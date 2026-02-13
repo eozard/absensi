@@ -427,10 +427,10 @@ const AdminDashboard = () => {
       return;
     }
 
-    let csv = "Nama,Kelompok,Tanggal,Sesi,Jam Masuk,Status\r\n";
+    let csv = "\ufeffNama;Kelompok;Tanggal;Sesi;Jam Masuk;Status\r\n";
     reportData.forEach((row) => {
       const tanggal = new Date(row.tanggal).toLocaleDateString("id-ID");
-      csv += `"${row.nama}","${row.kelompok}","${tanggal}","${row.sesi}","${row.jam_masuk}","${row.status}"\r\n`;
+      csv += `"${row.nama}";"${row.kelompok}";"${tanggal}";"${row.sesi}";"${row.jam_masuk}";"${row.status}"\r\n`;
     });
 
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -500,12 +500,12 @@ const AdminDashboard = () => {
 
   // Export rekap absensi hari ini ke CSV
   const handleExport = () => {
-    let csv = "Nama,Kelompok,Pagi,Sore,Status\r\n";
+    let csv = "\ufeffNama;Kelompok;Pagi;Sore;Status\r\n";
     attendanceToday.forEach((row) => {
       const pagiTime = row.pagi?.jam_masuk || "-";
       const soreTime = row.sore?.jam_masuk || "-";
       const status = row.pagi?.status || row.sore?.status || "Belum absen";
-      csv += `"${row.nama}","${row.kelompok}","${pagiTime}","${soreTime}","${status}"\r\n`;
+      csv += `"${row.nama}";"${row.kelompok}";"${pagiTime}";"${soreTime}";"${status}"\r\n`;
     });
 
     const blob = new Blob([csv], { type: "text/csv" });
