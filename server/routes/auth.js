@@ -452,13 +452,13 @@ export const absen = async (req, res) => {
     const timeInMinutes = hour * 60 + minute; // Convert ke total menit untuk mudah compare
 
     // STEP 4: Tentukan sesi berdasarkan waktu atau status absen pagi
-    // Pagi: 07:00 - 18:00 (420 menit - 1080 menit) - untuk testing lebih fleksibel
-    // Sore: dengan BYPASS_TIME_CHECK bisa absen sore kapan saja setelah pagi
+    // Pagi: 08:00 - 10:00 (480 menit - 600 menit)
+    // Sore: 15:00 - 17:00 (900 menit - 1020 menit)
     let sesi;
-    const pagiStart = 7 * 60; // 07:00 = 420 menit
-    const pagiEnd = 18 * 60; // 18:00 = 1080 menit
+    const pagiStart = 8 * 60; // 08:00 = 480 menit
+    const pagiEnd = 10 * 60; // 10:00 = 600 menit
     const soreStart = 15 * 60; // 15:00 = 900 menit
-    const soreEnd = 23 * 60; // 23:00 = 1380 menit
+    const soreEnd = 17 * 60; // 17:00 = 1020 menit
     const today = loginDateTime.toISOString().split("T")[0]; // Format: YYYY-MM-DD
 
     // Check apakah time validation di-bypass (development mode)
@@ -491,14 +491,14 @@ export const absen = async (req, res) => {
         return res.status(403).json({
           success: false,
           message:
-            "Waktu absensi tidak valid. Pagi: 07:00-18:00, Sore: 15:00-23:00",
+            "Waktu absensi tidak valid. Pagi: 08:00-10:00, Sore: 15:00-17:00",
         });
       }
     }
 
     // STEP 5: Validasi khusus untuk absen sore
     // Harus sudah absen pagi + jeda minimal 6 jam (exclude istirahat)
-    // Aturan ini TETAP BERLAKU bahkan saat bypass time
+    // TAPI jika BYPASS_TIME_CHECK=true, bypass aturan 6 jam (hanya wajib pagi dulu)
     if (sesi === "sore") {
       // Cek apakah sudah absen pagi hari ini
       const { data: pagiAttendance, error: pagiError } = await supabase
@@ -523,46 +523,51 @@ export const absen = async (req, res) => {
         });
       }
 
-      // Hitung jeda waktu antara absen pagi dan sore
-      // Exclude waktu istirahat (12:00-13:00) dari hitungan
-      const pagiLoginTime = new Date(pagiAttendance[0].login_time);
-      const diffMinutesRaw = (loginDateTime - pagiLoginTime) / (1000 * 60); // Selisih dalam menit
+      // Jika BYPASS_TIME_CHECK=true, skip aturan 6 jam
+      if (process.env.BYPASS_TIME_CHECK !== "true") {
+        // Hitung jeda waktu antara absen pagi dan sore
+        // Exclude waktu istirahat (12:00-13:00) dari hitungan
+        const pagiLoginTime = new Date(pagiAttendance[0].login_time);
+        const diffMinutesRaw = (loginDateTime - pagiLoginTime) / (1000 * 60); // Selisih dalam menit
 
-      // Convert ke Jakarta time untuk hitung overlap waktu istirahat
-      const pagiJakarta = new Date(
-        pagiLoginTime.getTime() + 7 * 60 * 60 * 1000,
-      );
-      const soreJakarta = new Date(
-        loginDateTime.getTime() + 7 * 60 * 60 * 1000,
-      );
-
-      // Hitung berapa menit overlap dengan waktu istirahat (12:00-13:00)
-      let overlapMinutes = 0;
-      if (pagiJakarta.toDateString() === soreJakarta.toDateString()) {
-        const startMinutes =
-          pagiJakarta.getHours() * 60 + pagiJakarta.getMinutes();
-        const endMinutes =
-          soreJakarta.getHours() * 60 + soreJakarta.getMinutes();
-        const breakStart = 12 * 60; // 12:00
-        const breakEnd = 13 * 60; // 13:00
-
-        // Hitung overlap (jika ada)
-        overlapMinutes = Math.max(
-          0,
-          Math.min(endMinutes, breakEnd) - Math.max(startMinutes, breakStart),
+        // Convert ke Jakarta time untuk hitung overlap waktu istirahat
+        const pagiJakarta = new Date(
+          pagiLoginTime.getTime() + 7 * 60 * 60 * 1000,
         );
-      }
+        const soreJakarta = new Date(
+          loginDateTime.getTime() + 7 * 60 * 60 * 1000,
+        );
 
-      // Selisih efektif = selisih total - waktu istirahat
-      const effectiveDiffMinutes = diffMinutesRaw - overlapMinutes;
-      const diffHours = effectiveDiffMinutes / 60;
+        // Hitung berapa menit overlap dengan waktu istirahat (12:00-13:00)
+        let overlapMinutes = 0;
+        if (pagiJakarta.toDateString() === soreJakarta.toDateString()) {
+          const startMinutes =
+            pagiJakarta.getHours() * 60 + pagiJakarta.getMinutes();
+          const endMinutes =
+            soreJakarta.getHours() * 60 + soreJakarta.getMinutes();
+          const breakStart = 12 * 60; // 12:00
+          const breakEnd = 13 * 60; // 13:00
 
-      // Tolak jika jeda kurang dari 6 jam
-      if (diffHours < 6) {
-        return res.status(403).json({
-          success: false,
-          message: `Jeda absen pagi-sore minimal 6 jam (di luar istirahat). Waktu tersisa: ${(6 - diffHours).toFixed(1)} jam`,
-        });
+          // Hitung overlap (jika ada)
+          overlapMinutes = Math.max(
+            0,
+            Math.min(endMinutes, breakEnd) - Math.max(startMinutes, breakStart),
+          );
+        }
+
+        // Selisih efektif = selisih total - waktu istirahat
+        const effectiveDiffMinutes = diffMinutesRaw - overlapMinutes;
+        const diffHours = effectiveDiffMinutes / 60;
+
+        // Tolak jika jeda kurang dari 6 jam
+        if (diffHours < 6) {
+          return res.status(403).json({
+            success: false,
+            message: `Jeda absen pagi-sore minimal 6 jam (di luar istirahat). Waktu tersisa: ${(6 - diffHours).toFixed(1)} jam`,
+          });
+        }
+      } else {
+        console.log("⏰ 6-hour jeda rule bypassed (BYPASS_TIME_CHECK=true)");
       }
     }
 
