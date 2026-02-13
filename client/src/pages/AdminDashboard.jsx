@@ -631,9 +631,6 @@ const AdminDashboard = () => {
                   <p className="text-3xl font-bold text-green-600">
                     {stats.hadirToday}
                   </p>
-                  <p className="text-xs text-gray-500 mt-2">
-                    Pagi: {stats.hadirPagi} | Sore: {stats.hadirSore}
-                  </p>
                 </div>
                 <CheckCircle className="w-12 h-12 text-green-600" />
               </div>

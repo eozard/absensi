@@ -25,58 +25,39 @@ export const getStats = async (req, res) => {
       .select("id")
       .eq("role", "anak_smk");
 
-    // Hadir hari ini per sesi
+    // Hadir hari ini (count per siswa unik, bukan per record)
     const today = new Date().toISOString().split("T")[0];
-    const { data: hadirPagi, error: hadirPagiError } = await supabase
+    const { data: hadirRaw, error: hadirError } = await supabase
       .from("attendances")
-      .select("id")
-      .eq("tanggal", today)
-      .eq("status", "hadir")
-      .eq("sesi", "pagi");
-
-    const { data: hadirSore, error: hadirSoreError } = await supabase
-      .from("attendances")
-      .select("id")
-      .eq("tanggal", today)
-      .eq("status", "hadir")
-      .eq("sesi", "sore");
-
-    const { data: hadirToday, error: hadirError } = await supabase
-      .from("attendances")
-      .select("id")
+      .select("nama")
       .eq("tanggal", today)
       .eq("status", "hadir");
 
-    // Izin hari ini (pending + approved)
-    const { data: izinToday, error: izinError } = await supabase
+    // Izin hari ini (count per siswa unik)
+    const { data: izinRaw, error: izinError } = await supabase
       .from("attendances")
-      .select("id")
+      .select("nama")
       .eq("tanggal", today)
       .eq("status", "izin");
 
-    if (
-      mahasiswaError ||
-      anakSmkError ||
-      hadirError ||
-      hadirPagiError ||
-      hadirSoreError ||
-      izinError
-    ) {
+    if (mahasiswaError || anakSmkError || hadirError || izinError) {
       console.error("Stats error");
       return res
         .status(500)
         .json({ success: false, message: "Database error" });
     }
 
+    // Count unique siswa (jangan duplikat pagi/sore)
+    const hadirUnique = new Set((hadirRaw || []).map((a) => a.nama));
+    const izinUnique = new Set((izinRaw || []).map((a) => a.nama));
+
     return res.json({
       success: true,
       stats: {
         totalMahasiswa: mahasiswa?.length || 0,
         totalAnakSmk: anakSmk?.length || 0,
-        hadirToday: hadirToday?.length || 0,
-        hadirPagi: hadirPagi?.length || 0,
-        hadirSore: hadirSore?.length || 0,
-        izinToday: izinToday?.length || 0,
+        hadirToday: hadirUnique.size,
+        izinToday: izinUnique.size,
       },
     });
   } catch (error) {
