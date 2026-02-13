@@ -801,7 +801,12 @@ export const submitIzin = async (req, res) => {
     );
 
     // Insert izin ke tabel attendances
-    // Untuk izin: jam_masuk set ke dummy (00:00:00) dan login_time ke tanggal izin
+    // Catat jam izin saat tombol ditekan (waktu server dalam WIB/Jakarta)
+    const izinTime = new Date();
+    const izinJakarta = new Date(izinTime.getTime() + 7 * 60 * 60 * 1000);
+    const izinHour = izinJakarta.getHours();
+    const izinMinute = izinJakarta.getMinutes();
+    const jamMasukIzin = `${String(izinHour).padStart(2, "0")}:${String(izinMinute).padStart(2, "0")}:00`;
     const { data, error } = await supabase
       .from("attendances")
       .insert({
@@ -810,12 +815,12 @@ export const submitIzin = async (req, res) => {
         tanggal: today,
         sesi: sesiIzin,
         status: "izin", // Status izin
-        jam_masuk: "00:00:00", // Dummy value untuk izin
-        login_time: new Date(today + "T00:00:00Z").toISOString(), // Dummy value
+        jam_masuk: jamMasukIzin,
+        login_time: izinTime.toISOString(),
         keterangan,
         bukti_url: bukti_url || null,
         status_approval: "pending", // Default pending menunggu admin approve
-        created_at: new Date().toISOString(),
+        created_at: izinTime.toISOString(),
       })
       .select();
 
