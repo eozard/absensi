@@ -72,10 +72,10 @@ const MahasiswaDashboard = () => {
 
       // Check session times
       const timeInMinutes = hours * 60 + minutes;
-      const pagiStart = 8 * 60;
-      const pagiEnd = 10 * 60;
-      const soreStart = 15 * 60;
-      const soreEnd = 17 * 60;
+      const pagiStart = 7 * 60; // 07:00
+      const pagiEnd = 18 * 60; // 18:00
+      const soreStart = 15 * 60; // 15:00
+      const soreEnd = 23 * 60; // 23:00
 
       setCanAbsenPagi(timeInMinutes >= pagiStart && timeInMinutes <= pagiEnd);
       setCanAbsenSore(timeInMinutes >= soreStart && timeInMinutes <= soreEnd);
@@ -242,9 +242,9 @@ const MahasiswaDashboard = () => {
     const minutes = now.getMinutes();
     const timeInMinutes = hours * 60 + minutes;
 
-    if (timeInMinutes >= 8 * 60 && timeInMinutes <= 10 * 60) {
+    if (timeInMinutes >= 7 * 60 && timeInMinutes <= 18 * 60) {
       return "Pagi";
-    } else if (timeInMinutes >= 15 * 60 && timeInMinutes <= 17 * 60) {
+    } else if (timeInMinutes >= 15 * 60 && timeInMinutes <= 23 * 60) {
       return "Sore";
     }
     return "Diluar Jam Absen";

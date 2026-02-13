@@ -452,13 +452,13 @@ export const absen = async (req, res) => {
     const timeInMinutes = hour * 60 + minute; // Convert ke total menit untuk mudah compare
 
     // STEP 4: Tentukan sesi berdasarkan waktu atau status absen pagi
-    // Pagi: 08:00 - 10:00 (480 menit - 600 menit)
-    // Sore: 15:00 - 17:00 (900 menit - 1020 menit)
+    // Pagi: 07:00 - 18:00 (420 menit - 1080 menit) - untuk testing lebih fleksibel
+    // Sore: dengan BYPASS_TIME_CHECK bisa absen sore kapan saja setelah pagi
     let sesi;
-    const pagiStart = 8 * 60; // 08:00 = 480 menit
-    const pagiEnd = 10 * 60; // 10:00 = 600 menit
+    const pagiStart = 7 * 60; // 07:00 = 420 menit
+    const pagiEnd = 18 * 60; // 18:00 = 1080 menit
     const soreStart = 15 * 60; // 15:00 = 900 menit
-    const soreEnd = 17 * 60; // 17:00 = 1020 menit
+    const soreEnd = 23 * 60; // 23:00 = 1380 menit
     const today = loginDateTime.toISOString().split("T")[0]; // Format: YYYY-MM-DD
 
     // Check apakah time validation di-bypass (development mode)
@@ -491,7 +491,7 @@ export const absen = async (req, res) => {
         return res.status(403).json({
           success: false,
           message:
-            "Waktu absensi tidak valid. Pagi: 08:00-10:00, Sore: 15:00-17:00",
+            "Waktu absensi tidak valid. Pagi: 07:00-18:00, Sore: 15:00-23:00",
         });
       }
     }
