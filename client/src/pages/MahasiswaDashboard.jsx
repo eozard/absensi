@@ -66,16 +66,18 @@ const MahasiswaDashboard = () => {
   useEffect(() => {
     const timer = setInterval(() => {
       const now = new Date();
-      const hours = now.getHours();
-      const minutes = now.getMinutes();
-      const seconds = now.getSeconds();
+      // PENTING: Hitung waktu dengan timezone Jakarta (UTC+7), sama seperti backend!
+      const jakartaTime = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+      const hours = jakartaTime.getHours();
+      const minutes = jakartaTime.getMinutes();
+      const seconds = jakartaTime.getSeconds();
 
       // Check session times
       const timeInMinutes = hours * 60 + minutes;
-      const pagiStart = 7 * 60; // 07:00
-      const pagiEnd = 18 * 60; // 18:00
-      const soreStart = 15 * 60; // 15:00
-      const soreEnd = 23 * 60; // 23:00
+      const pagiStart = 8 * 60;
+      const pagiEnd = 10 * 60;
+      const soreStart = 15 * 60;
+      const soreEnd = 17 * 60;
 
       setCanAbsenPagi(timeInMinutes >= pagiStart && timeInMinutes <= pagiEnd);
       setCanAbsenSore(timeInMinutes >= soreStart && timeInMinutes <= soreEnd);
@@ -238,13 +240,15 @@ const MahasiswaDashboard = () => {
   // Helper untuk menampilkan sesi saat ini
   const getCurrentSession = () => {
     const now = new Date();
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
+    // PENTING: Hitung waktu dengan timezone Jakarta (UTC+7), sama seperti backend!
+    const jakartaTime = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+    const hours = jakartaTime.getHours();
+    const minutes = jakartaTime.getMinutes();
     const timeInMinutes = hours * 60 + minutes;
 
-    if (timeInMinutes >= 7 * 60 && timeInMinutes <= 18 * 60) {
+    if (timeInMinutes >= 8 * 60 && timeInMinutes <= 10 * 60) {
       return "Pagi";
-    } else if (timeInMinutes >= 15 * 60 && timeInMinutes <= 23 * 60) {
+    } else if (timeInMinutes >= 15 * 60 && timeInMinutes <= 17 * 60) {
       return "Sore";
     }
     return "Diluar Jam Absen";
