@@ -429,10 +429,12 @@ const AdminDashboard = () => {
       return;
     }
 
-    let csv = "\ufeffNama;Kelompok;Tanggal;Sesi;Jam Masuk;Status\r\n";
+    let csv =
+      "\ufeffNama;Kelompok;Tanggal;Sesi;Jam Masuk;Status;Keterangan\r\n";
     reportData.forEach((row) => {
       const tanggal = new Date(row.tanggal).toLocaleDateString("id-ID");
-      csv += `"${row.nama}";"${row.kelompok}";"${tanggal}";"${row.sesi}";"${row.jam_masuk}";"${row.status}"\r\n`;
+      const keterangan = row.status === "izin" ? row.keterangan || "" : "";
+      csv += `"${row.nama}";"${row.kelompok}";"${tanggal}";"${row.sesi}";"${row.jam_masuk}";"${row.status}";"${keterangan}"\r\n`;
     });
 
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -788,6 +790,9 @@ const AdminDashboard = () => {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                         Status
                       </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Keterangan
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -1118,6 +1123,9 @@ const AdminDashboard = () => {
                               >
                                 {item.status.replace("_", " ")}
                               </span>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-600">
+                              {isIzin ? item.keterangan || "-" : "-"}
                             </td>
                           </tr>
                         ))
