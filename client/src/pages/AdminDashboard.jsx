@@ -1295,6 +1295,9 @@ const AdminDashboard = () => {
                         Status
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Keterangan
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                         Aksi
                       </th>
                     </tr>
@@ -1355,6 +1358,9 @@ const AdminDashboard = () => {
                                   : item.status.charAt(0).toUpperCase() +
                                     item.status.slice(1)}
                               </span>
+                            </td>
+                            <td className="px-6 py-4 text-sm">
+                              {item.keterangan || "-"}
                             </td>
                             <td className="px-6 py-4">
                               {item.status === "izin" ? (
