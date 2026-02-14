@@ -82,8 +82,14 @@ const MahasiswaDashboard = () => {
       // DEVELOPMENT: Untuk test/trial and error, gunakan env Vite untuk unlock tombol
       // Backend tetap akan validate dengan BYPASS_TIME_CHECK=true
       const bypassMode = import.meta.env.VITE_BYPASS_TIME_CHECK === "true";
+      const bypassPagiOnly = import.meta.env.VITE_BYPASS_PAGI_ONLY === "true";
 
-      if (bypassMode) {
+      if (bypassPagiOnly) {
+        // Mode bypass pagi-only: hanya allow absen pagi
+        setCanAbsenPagi(true);
+        setCanAbsenSore(false);
+        console.log("🔄 Frontend bypass mode ON - pagi only");
+      } else if (bypassMode) {
         // Mode bypass: selalu allow absen
         setCanAbsenPagi(true);
         setCanAbsenSore(true);

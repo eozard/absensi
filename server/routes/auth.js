@@ -466,9 +466,13 @@ export const absen = async (req, res) => {
     const today = loginDateTime.toISOString().split("T")[0]; // Format: YYYY-MM-DD
 
     // Check apakah time validation di-bypass (development mode)
+    // Jika BYPASS_PAGI_ONLY=true, selalu set sesi ke pagi
     // Jika BYPASS_TIME_CHECK=true, tentukan sesi berdasarkan apakah sudah absen pagi
-    if (process.env.BYPASS_TIME_CHECK === "true") {
-      console.log("⏰ Time check bypassed (development mode)");
+    if (process.env.BYPASS_PAGI_ONLY === "true") {
+      console.log("⏰ Time check bypassed (pagi only)");
+      sesi = "pagi";
+    } else if (process.env.BYPASS_TIME_CHECK === "true") {
+      console.log("⏰ Time check bypassed (full)");
 
       // Cek apakah sudah absen pagi hari ini
       const { data: pagiAttendance } = await supabase
