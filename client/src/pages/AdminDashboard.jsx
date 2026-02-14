@@ -72,6 +72,12 @@ const AdminDashboard = () => {
     "jaringan",
     "desain komunikasi visual",
   ];
+  const filteredReportStudents =
+    reportFilters.kelompok === "all"
+      ? students
+      : students.filter(
+          (student) => student.kelompok === reportFilters.kelompok,
+        );
   // Ambil semua data dashboard admin sekaligus
   const fetchAllData = async () => {
     setLoading(true);
@@ -1199,12 +1205,26 @@ const AdminDashboard = () => {
                   <select
                     className="input-field"
                     value={reportFilters.kelompok}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const nextKelompok = e.target.value;
+                      const nextStudents =
+                        nextKelompok === "all"
+                          ? students
+                          : students.filter(
+                              (student) => student.kelompok === nextKelompok,
+                            );
+                      const namaStillValid =
+                        reportFilters.nama === "all" ||
+                        nextStudents.some(
+                          (student) => student.nama === reportFilters.nama,
+                        );
+
                       setReportFilters({
                         ...reportFilters,
-                        kelompok: e.target.value,
-                      })
-                    }
+                        kelompok: nextKelompok,
+                        nama: namaStillValid ? reportFilters.nama : "all",
+                      });
+                    }}
                   >
                     <option value="all">Semua Kelompok</option>
                     {kelompokOptions.map((k) => (
@@ -1230,7 +1250,7 @@ const AdminDashboard = () => {
                     }
                   >
                     <option value="all">Semua Siswa</option>
-                    {students.map((student) => (
+                    {filteredReportStudents.map((student) => (
                       <option key={student.nama} value={student.nama}>
                         {student.nama}
                       </option>
