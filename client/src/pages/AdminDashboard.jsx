@@ -78,6 +78,9 @@ const AdminDashboard = () => {
       : students.filter(
           (student) => student.kelompok === reportFilters.kelompok,
         );
+  const studentRoleByName = Object.fromEntries(
+    (students || []).map((student) => [student.nama, student.role]),
+  );
   // Ambil semua data dashboard admin sekaligus
   const fetchAllData = async () => {
     setLoading(true);
@@ -782,6 +785,9 @@ const AdminDashboard = () => {
                         Nama
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Role
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                         Kelompok
                       </th>
                       <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
@@ -1339,6 +1345,9 @@ const AdminDashboard = () => {
                           <tr key={idx} className="hover:bg-gray-50">
                             <td className="px-6 py-4 text-sm font-medium">
                               {item.nama}
+                            </td>
+                            <td className="px-6 py-4 text-sm capitalize">
+                              {studentRoleByName[item.nama] || "-"}
                             </td>
                             <td className="px-6 py-4 text-sm capitalize">
                               {item.kelompok}
