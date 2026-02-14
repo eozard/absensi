@@ -488,7 +488,7 @@ const MahasiswaDashboard = () => {
 
           <p className="text-xs text-gray-500 mt-4 text-center">
             <AlertCircle className="w-4 h-4 inline mr-1" />
-            Pagi: 08:00-14:40 | Sore: 15:00-18:00 (jeda min 6 jam)
+            08.00-10.00 | 15.00-17.00
           </p>
         </div>
 
