@@ -439,11 +439,13 @@ const AdminDashboard = () => {
     }
 
     let csv =
-      "\ufeffNama;Kelompok;Tanggal;Sesi;Jam Masuk;Status;Keterangan\r\n";
+      "\ufeffNama;Role;Kelompok;Tanggal;Sesi;Jam Masuk;Status;Keterangan\r\n";
     reportData.forEach((row) => {
       const tanggal = new Date(row.tanggal).toLocaleDateString("id-ID");
+      const tanggalText = `'${tanggal}`;
       const keterangan = row.status === "izin" ? row.keterangan || "" : "";
-      csv += `"${row.nama}";"${row.kelompok}";"${tanggal}";"${row.sesi}";"${row.jam_masuk}";"${row.status}";"${keterangan}"\r\n`;
+      const role = studentRoleByName[row.nama] || "-";
+      csv += `"${row.nama}";"${role}";"${row.kelompok}";"${tanggalText}";"${row.sesi}";"${row.jam_masuk}";"${row.status}";"${keterangan}"\r\n`;
     });
 
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
