@@ -451,14 +451,14 @@ const MahasiswaDashboard = () => {
               onClick={() => handleAbsen("sore")}
               disabled={
                 !canAbsenSore ||
-                (!hadiruTodayPagi && !bypassMode) ||
+                !hadiruTodayPagi ||
                 hadirTodaySore ||
                 absenLoading
               }
               title={
                 !canAbsenSore
                   ? "Diluar jam absen sore"
-                  : !hadiruTodayPagi && !bypassMode
+                  : !hadiruTodayPagi
                     ? "Harus absen pagi dulu"
                     : hadirTodaySore
                       ? "Sudah absen sore"
