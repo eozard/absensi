@@ -19,6 +19,9 @@ import ConfirmDialog from "../components/ConfirmDialog";
 import { useToast } from "../hooks/useToast";
 
 const MahasiswaDashboard = () => {
+  const bypassMode = import.meta.env.VITE_BYPASS_TIME_CHECK === "true";
+  const bypassPagiOnly = import.meta.env.VITE_BYPASS_PAGI_ONLY === "true";
+
   // State utama untuk user dan data absensi
   const [user, setUser] = useState(null);
   const [history, setHistory] = useState([]);
@@ -81,9 +84,6 @@ const MahasiswaDashboard = () => {
 
       // DEVELOPMENT: Untuk test/trial and error, gunakan env Vite untuk unlock tombol
       // Backend tetap akan validate dengan BYPASS_TIME_CHECK=true
-      const bypassMode = import.meta.env.VITE_BYPASS_TIME_CHECK === "true";
-      const bypassPagiOnly = import.meta.env.VITE_BYPASS_PAGI_ONLY === "true";
-
       if (bypassPagiOnly) {
         // Mode bypass pagi-only: hanya allow absen pagi
         setCanAbsenPagi(true);
@@ -451,14 +451,14 @@ const MahasiswaDashboard = () => {
               onClick={() => handleAbsen("sore")}
               disabled={
                 !canAbsenSore ||
-                !hadiruTodayPagi ||
+                (!hadiruTodayPagi && !bypassMode) ||
                 hadirTodaySore ||
                 absenLoading
               }
               title={
                 !canAbsenSore
                   ? "Diluar jam absen sore"
-                  : !hadiruTodayPagi
+                  : !hadiruTodayPagi && !bypassMode
                     ? "Harus absen pagi dulu"
                     : hadirTodaySore
                       ? "Sudah absen sore"
