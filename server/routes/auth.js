@@ -449,10 +449,20 @@ export const absen = async (req, res) => {
       if (!value) return value;
       return /Z$|[+-]\d{2}:\d{2}$/.test(value) ? value : `${value}Z`;
     };
+    const getJakartaDateTimeParts = (date) => {
+      const shifted = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+      return {
+        hour: shifted.getUTCHours(),
+        minute: shifted.getUTCMinutes(),
+        date: shifted.toISOString().split("T")[0],
+      };
+    };
     const loginDateTime = new Date(normalizeIso(login_time));
-    const jakartaTime = new Date(loginDateTime.getTime() + 7 * 60 * 60 * 1000); // +7 jam
-    const hour = jakartaTime.getHours();
-    const minute = jakartaTime.getMinutes();
+    const {
+      hour,
+      minute,
+      date: today,
+    } = getJakartaDateTimeParts(loginDateTime);
     const timeInMinutes = hour * 60 + minute; // Convert ke total menit untuk mudah compare
 
     // STEP 4: Tentukan sesi berdasarkan waktu atau status absen pagi
@@ -463,7 +473,7 @@ export const absen = async (req, res) => {
     const pagiEnd = 10 * 60; // 10:00 = 600 menit
     const soreStart = 15 * 60; // 15:00 = 900 menit
     const soreEnd = 17 * 60; // 17:00 = 1020 menit
-    const today = loginDateTime.toISOString().split("T")[0]; // Format: YYYY-MM-DD
+    // today harus berdasarkan timezone Jakarta agar validasi harian akurat.
 
     // Check apakah time validation di-bypass (development mode)
     // Jika BYPASS_PAGI_ONLY=true, selalu set sesi ke pagi
@@ -565,9 +575,9 @@ export const absen = async (req, res) => {
         let overlapMinutes = 0;
         if (pagiJakarta.toDateString() === soreJakarta.toDateString()) {
           const startMinutes =
-            pagiJakarta.getHours() * 60 + pagiJakarta.getMinutes();
+            pagiJakarta.getUTCHours() * 60 + pagiJakarta.getUTCMinutes();
           const endMinutes =
-            soreJakarta.getHours() * 60 + soreJakarta.getMinutes();
+            soreJakarta.getUTCHours() * 60 + soreJakarta.getUTCMinutes();
           const breakStart = 12 * 60; // 12:00
           const breakEnd = 13 * 60; // 13:00
 
@@ -808,8 +818,8 @@ export const submitIzin = async (req, res) => {
     // Catat jam izin saat tombol ditekan (waktu server dalam WIB/Jakarta)
     const izinTime = new Date();
     const izinJakarta = new Date(izinTime.getTime() + 7 * 60 * 60 * 1000);
-    const izinHour = izinJakarta.getHours();
-    const izinMinute = izinJakarta.getMinutes();
+    const izinHour = izinJakarta.getUTCHours();
+    const izinMinute = izinJakarta.getUTCMinutes();
     const jamMasukIzin = `${String(izinHour).padStart(2, "0")}:${String(izinMinute).padStart(2, "0")}:00`;
     const { data, error } = await supabase
       .from("attendances")

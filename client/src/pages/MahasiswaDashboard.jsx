@@ -66,11 +66,11 @@ const MahasiswaDashboard = () => {
   useEffect(() => {
     const timer = setInterval(() => {
       const now = new Date();
-      // PENTING: Hitung waktu dengan timezone Jakarta (UTC+7), sama seperti backend!
-      const jakartaTime = new Date(now.getTime() + 7 * 60 * 60 * 1000);
-      const hours = jakartaTime.getHours();
-      const minutes = jakartaTime.getMinutes();
-      const seconds = jakartaTime.getSeconds();
+      // PENTING: Hitung waktu dengan timezone Jakarta (UTC+7) berbasis UTC
+      // agar tidak double-offset saat device user sudah berada di timezone WIB.
+      const hours = (now.getUTCHours() + 7) % 24;
+      const minutes = now.getUTCMinutes();
+      const seconds = now.getUTCSeconds();
 
       // Check session times
       const timeInMinutes = hours * 60 + minutes;
@@ -258,10 +258,10 @@ const MahasiswaDashboard = () => {
   // Helper untuk menampilkan sesi saat ini
   const getCurrentSession = () => {
     const now = new Date();
-    // PENTING: Hitung waktu dengan timezone Jakarta (UTC+7), sama seperti backend!
-    const jakartaTime = new Date(now.getTime() + 7 * 60 * 60 * 1000);
-    const hours = jakartaTime.getHours();
-    const minutes = jakartaTime.getMinutes();
+    // PENTING: Hitung waktu dengan timezone Jakarta (UTC+7) berbasis UTC
+    // agar konsisten lintas timezone client.
+    const hours = (now.getUTCHours() + 7) % 24;
+    const minutes = now.getUTCMinutes();
     const timeInMinutes = hours * 60 + minutes;
 
     if (timeInMinutes >= 8 * 60 && timeInMinutes <= 10 * 60) {
