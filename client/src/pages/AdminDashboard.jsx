@@ -439,7 +439,7 @@ const AdminDashboard = () => {
     }
 
     let csv =
-      "\ufeffNama;Role;Kelompok;Tanggal;Sesi;Jam Masuk;Status;Keterangan\r\n";
+      "\ufeffNama;Role;Jurusan;Tanggal;Sesi;Jam Masuk;Status;Keterangan\r\n";
     reportData.forEach((row) => {
       const tanggal = new Date(row.tanggal).toLocaleDateString("id-ID");
       const tanggalText = `'${tanggal}`;
@@ -1314,7 +1314,10 @@ const AdminDashboard = () => {
                         Nama
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Kelompok
+                        Role
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Jurusan
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                         Tanggal
