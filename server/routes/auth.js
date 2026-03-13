@@ -542,7 +542,9 @@ export const absen = async (req, res) => {
         });
       }
 
-      const bypassJedaCheck = process.env.BYPASS_JEDA_CHECK === "true";
+      const bypassJedaCheck =
+        process.env.BYPASS_JEDA_CHECK === "true" ||
+        process.env.BYPASS_TIME_CHECK === "true";
 
       if (!bypassJedaCheck) {
         // Hitung jeda waktu antara absen pagi dan sore
@@ -607,7 +609,9 @@ export const absen = async (req, res) => {
           });
         }
       } else {
-        console.log("⏰ 6-hour jeda rule bypassed (BYPASS_JEDA_CHECK=true)");
+        console.log(
+          "⏰ 6-hour jeda rule bypassed (BYPASS_JEDA_CHECK/BYPASS_TIME_CHECK=true)",
+        );
       }
     }
 
