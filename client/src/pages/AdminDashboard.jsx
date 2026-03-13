@@ -445,7 +445,16 @@ const AdminDashboard = () => {
       const tanggalText = `'${tanggal}`;
       const keterangan = row.status === "izin" ? row.keterangan || "" : "";
       const role = studentRoleByName[row.nama] || "-";
-      csv += `"${row.nama}";"${role}";"${row.kelompok}";"${tanggalText}";"${row.sesi}";"${row.jam_masuk}";"${row.status}";"${keterangan}"\r\n`;
+      const approvalStatus = (row.status_approval || "pending").toLowerCase();
+      const izinLabel =
+        approvalStatus === "approved"
+          ? "Izin Diterima"
+          : approvalStatus === "rejected"
+            ? "Izin Ditolak"
+            : "Izin Pending";
+      const sesiText = row.status === "izin" ? izinLabel : row.sesi;
+      const statusText = row.status === "izin" ? izinLabel : row.status;
+      csv += `"${row.nama}";"${role}";"${row.kelompok}";"${tanggalText}";"${sesiText}";"${row.jam_masuk}";"${statusText}";"${keterangan}"\r\n`;
     });
 
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
