@@ -424,3 +424,219 @@ export const loginAdminPendaftaran = async (req, res) => {
     });
   }
 };
+
+/*
+ * ============================================================================
+ * ENDPOINT: GET /api/admin-pendaftaran/list
+ * ============================================================================
+ * Debug endpoint: list username admin yang ada (tanpa password).
+ * Berguna untuk cek apakah akun admin sudah ada di database.
+ * ============================================================================
+ */
+export const listAdminPendaftaran = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("admin_pendaftaran")
+      .select("id, username, nama, created_at")
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Gagal mengambil daftar admin: " + error.message,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data,
+      total: data.length,
+    });
+  } catch (error) {
+    console.error("List admin error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Terjadi kesalahan pada server",
+    });
+  }
+};
+
+/*
+ * ============================================================================
+ * ENDPOINT: POST /api/admin-pendaftaran/create
+ * ============================================================================
+ * Buat akun admin baru.
+ *
+ * CARA PAKAI (pilih salah satu):
+ *
+ * 1. Dengan ADMIN_SETUP_SECRET (env var):
+ *    Header: x-setup-secret: <value dari env ADMIN_SETUP_SECRET>
+ *    Body: { username, password, nama }
+ *
+ * 2. Dengan JWT token admin yang sudah login (untuk buat admin tambahan):
+ *    Header: Authorization: Bearer <token>
+ *    Body: { username, password, nama }
+ *
+ * AMAN: jika tidak ada secret dan tidak ada token, request ditolak.
+ * ============================================================================
+ */
+export const createAdminPendaftaran = async (req, res) => {
+  try {
+    const { username, password, nama } = req.body;
+
+    if (!username || !password || !nama) {
+      return res.status(400).json({
+        success: false,
+        message: "Username, password, dan nama wajib diisi",
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password minimal 6 karakter",
+      });
+    }
+
+    // Cek otorisasi: secret key ATAU JWT admin
+    const setupSecret = process.env.ADMIN_SETUP_SECRET;
+    const headerSecret = req.headers["x-setup-secret"];
+    const authHeader = req.headers.authorization;
+    let authorized = false;
+
+    // Opsi 1: secret key cocok
+    if (setupSecret && headerSecret && headerSecret === setupSecret) {
+      authorized = true;
+    }
+
+    // Opsi 2: JWT admin yang sudah login
+    if (!authorized && authHeader && authHeader.startsWith("Bearer ")) {
+      try {
+        const token = authHeader.substring(7);
+        const decoded = jwt.verify(token, getJWTSecret());
+        if (decoded.role === "admin_pendaftaran") {
+          authorized = true;
+        }
+      } catch {
+        // token invalid, tetap unauthorized
+      }
+    }
+
+    if (!authorized) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "Tidak diizinkan. Butuh ADMIN_SETUP_SECRET di header atau login sebagai admin.",
+      });
+    }
+
+    // Cek apakah username sudah ada
+    const { data: existing } = await supabase
+      .from("admin_pendaftaran")
+      .select("id")
+      .eq("username", username)
+      .single();
+
+    if (existing) {
+      return res.status(400).json({
+        success: false,
+        message: "Username sudah digunakan",
+      });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Insert admin baru
+    const { data, error } = await supabase
+      .from("admin_pendaftaran")
+      .insert([
+        {
+          username,
+          password: hashedPassword,
+          nama,
+        },
+      ])
+      .select("id, username, nama, created_at");
+
+    if (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Gagal membuat admin: " + error.message,
+      });
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: `Admin '${username}' berhasil dibuat`,
+      data: data[0],
+    });
+  } catch (error) {
+    console.error("Create admin error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Terjadi kesalahan pada server",
+    });
+  }
+};
+
+/*
+ * ============================================================================
+ * ENDPOINT: DELETE /api/admin-pendaftaran/:id
+ * ============================================================================
+ * Hapus akun admin (admin only).
+ * ============================================================================
+ */
+export const deleteAdminPendaftaran = async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({
+        success: false,
+        message: "Tidak terautentikasi",
+      });
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = jwt.verify(token, getJWTSecret());
+    if (decoded.role !== "admin_pendaftaran") {
+      return res.status(403).json({
+        success: false,
+        message: "Akses ditolak",
+      });
+    }
+
+    const { id } = req.params;
+
+    // Cegah hapus diri sendiri
+    if (String(decoded.id) === String(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Tidak bisa menghapus akun sendiri",
+      });
+    }
+
+    const { error } = await supabase
+      .from("admin_pendaftaran")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Gagal menghapus admin: " + error.message,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Admin berhasil dihapus",
+    });
+  } catch (error) {
+    console.error("Delete admin error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Terjadi kesalahan pada server",
+    });
+  }
+};

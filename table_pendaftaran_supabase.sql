@@ -76,9 +76,11 @@ CREATE TABLE IF NOT EXISTS admin_pendaftaran (
 --   $2b$10$yJaDEXjw5Duh9hwmzU62PuEYfF1LihUEvGTfxuxuoMG11gasJinn.
 -- Jika ingin ganti password, generate hash baru dengan:
 --   node -e "console.log(require('bcryptjs').hashSync('PASSWORD_BARU', 10))"
+-- Atau panggil endpoint: POST /api/admin-pendaftaran/create
+--   (dengan x-setup-secret header atau token admin yang sudah login)
 INSERT INTO admin_pendaftaran (username, password, nama)
 VALUES ('admin', '$2b$10$yJaDEXjw5Duh9hwmzU62PuEYfF1LihUEvGTfxuxuoMG11gasJinn.', 'Admin Pendaftaran')
-ON CONFLICT (username) DO UPDATE SET password = EXCLUDED.password;
+ON CONFLICT (username) DO UPDATE SET password = EXCLUDED.password, nama = EXCLUDED.nama;
 
 -- RLS untuk admin_pendaftaran
 ALTER TABLE admin_pendaftaran ENABLE ROW LEVEL SECURITY;

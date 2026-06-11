@@ -26,6 +26,9 @@ import {
   Users,
   AlertCircle,
   RefreshCw,
+  Shield,
+  Key,
+  UserCog,
 } from "lucide-react";
 import axios from "axios";
 import ToastStack from "../components/Toast";
@@ -63,12 +66,25 @@ const AdminPendaftaranPage = () => {
   const [loginError, setLoginError] = useState("");
 
   // Dashboard state
+  const [activeTab, setActiveTab] = useState("pendaftar"); // 'pendaftar' | 'admins'
   const [pendaftar, setPendaftar] = useState([]);
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editDivisi, setEditDivisi] = useState("");
   const [confirmState, setConfirmState] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
+
+  // Admin management state
+  const [adminList, setAdminList] = useState([]);
+  const [adminLoading, setAdminLoading] = useState(false);
+  const [showCreateAdmin, setShowCreateAdmin] = useState(false);
+  const [newAdmin, setNewAdmin] = useState({
+    username: "",
+    password: "",
+    nama: "",
+  });
+  const [creatingAdmin, setCreatingAdmin] = useState(false);
+  const [confirmDeleteAdmin, setConfirmDeleteAdmin] = useState(null);
 
   const { toasts, pushToast, dismissToast } = useToast();
 
@@ -229,6 +245,89 @@ const AdminPendaftaranPage = () => {
     }
   };
 
+  // ===== Admin management =====
+  const fetchAdminList = async () => {
+    setAdminLoading(true);
+    try {
+      const res = await axios.get(`${API_URL}/admin-pendaftaran/list`);
+      if (res.data.success) {
+        setAdminList(res.data.data || []);
+      }
+    } catch (err) {
+      const message =
+        err.response?.data?.message || "Gagal memuat daftar admin";
+      pushToast({ type: "error", message });
+    } finally {
+      setAdminLoading(false);
+    }
+  };
+
+  const handleCreateAdmin = async (e) => {
+    e.preventDefault();
+    if (!newAdmin.username || !newAdmin.password || !newAdmin.nama) {
+      pushToast({ type: "error", message: "Semua field wajib diisi" });
+      return;
+    }
+    if (newAdmin.password.length < 6) {
+      pushToast({ type: "error", message: "Password minimal 6 karakter" });
+      return;
+    }
+
+    setCreatingAdmin(true);
+    try {
+      const res = await api.post("/admin-pendaftaran/create", newAdmin);
+      if (res.data.success) {
+        pushToast({
+          type: "success",
+          message: `Admin '${newAdmin.username}' berhasil dibuat`,
+        });
+        setNewAdmin({ username: "", password: "", nama: "" });
+        setShowCreateAdmin(false);
+        fetchAdminList();
+      }
+    } catch (err) {
+      const message =
+        err.response?.data?.message || "Gagal membuat admin";
+      pushToast({ type: "error", message });
+    } finally {
+      setCreatingAdmin(false);
+    }
+  };
+
+  const handleDeleteAdmin = async (id, username) => {
+    if (String(admin?.id) === String(id)) {
+      pushToast({
+        type: "error",
+        message: "Tidak bisa menghapus akun sendiri",
+      });
+      setConfirmDeleteAdmin(null);
+      return;
+    }
+    try {
+      const res = await api.delete(`/admin-pendaftaran/${id}`);
+      if (res.data.success) {
+        pushToast({
+          type: "success",
+          message: `Admin '${username}' berhasil dihapus`,
+        });
+        fetchAdminList();
+      }
+    } catch (err) {
+      const message =
+        err.response?.data?.message || "Gagal menghapus admin";
+      pushToast({ type: "error", message });
+    } finally {
+      setConfirmDeleteAdmin(null);
+    }
+  };
+
+  useEffect(() => {
+    if (token && activeTab === "admins") {
+      fetchAdminList();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
   // Split priority (30 paling awal) dan excess
   const priority = pendaftar.slice(0, 30);
   const excess = pendaftar.slice(30);
@@ -339,11 +438,17 @@ const AdminPendaftaranPage = () => {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={fetchPendaftar}
+              onClick={() =>
+                activeTab === "pendaftar" ? fetchPendaftar() : fetchAdminList()
+              }
               className="btn-secondary flex items-center gap-2 text-sm"
-              disabled={loading}
+              disabled={loading || adminLoading}
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`w-4 h-4 ${
+                  loading || adminLoading ? "animate-spin" : ""
+                }`}
+              />
               <span className="hidden sm:inline">Refresh</span>
             </button>
             <button
@@ -355,10 +460,40 @@ const AdminPendaftaranPage = () => {
             </button>
           </div>
         </div>
+
+        {/* Tabs */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex gap-1 border-b border-gray-200 -mb-px">
+            <button
+              onClick={() => setActiveTab("pendaftar")}
+              className={`px-4 py-2.5 text-sm font-medium flex items-center gap-2 border-b-2 transition ${
+                activeTab === "pendaftar"
+                  ? "border-indigo-600 text-indigo-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              Pendaftar
+            </button>
+            <button
+              onClick={() => setActiveTab("admins")}
+              className={`px-4 py-2.5 text-sm font-medium flex items-center gap-2 border-b-2 transition ${
+                activeTab === "admins"
+                  ? "border-indigo-600 text-indigo-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <Shield className="w-4 h-4" />
+              Kelola Admin
+            </button>
+          </div>
+        </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        {/* Stats */}
+        {activeTab === "pendaftar" && (
+          <>
+            {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="card flex items-center gap-4">
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -461,6 +596,93 @@ const AdminPendaftaranPage = () => {
             </div>
           </section>
         )}
+          </>
+        )}
+
+        {/* ========== TAB: KELOLA ADMIN ========== */}
+        {activeTab === "admins" && (
+          <section>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-indigo-600" />
+                  Daftar Admin Pendaftaran
+                </h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  Kelola akun admin yang punya akses ke dashboard ini
+                </p>
+              </div>
+              <button
+                onClick={() => setShowCreateAdmin(true)}
+                className="btn-primary flex items-center gap-2 text-sm"
+              >
+                <UserCog className="w-4 h-4" />
+                Buat Admin Baru
+              </button>
+            </div>
+
+            {adminLoading ? (
+              <div className="card flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+              </div>
+            ) : adminList.length === 0 ? (
+              <div className="card text-center py-12 text-gray-500">
+                <Shield className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                <p>Belum ada admin</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {adminList.map((a) => {
+                  const isMe = String(admin?.id) === String(a.id);
+                  return (
+                    <div
+                      key={a.id}
+                      className={`card ${
+                        isMe ? "ring-2 ring-indigo-500 bg-indigo-50/30" : ""
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center font-bold flex-shrink-0">
+                          {a.nama?.[0]?.toUpperCase() || "A"}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-bold text-gray-900 truncate">
+                              {a.nama}
+                            </h3>
+                            {isMe && (
+                              <span className="badge-blue text-xs">Anda</span>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-500">
+                            @{a.username}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            Dibuat:{" "}
+                            {new Date(a.created_at).toLocaleDateString("id-ID")}
+                          </p>
+                        </div>
+                      </div>
+                      {!isMe && (
+                        <div className="mt-3 pt-3 border-t border-gray-100">
+                          <button
+                            onClick={() =>
+                              setConfirmDeleteAdmin({ id: a.id, username: a.username })
+                            }
+                            className="btn-danger text-xs py-1.5 w-full flex items-center justify-center gap-1"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            Hapus Admin
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        )}
       </main>
 
       {/* Detail Modal */}
@@ -468,7 +690,7 @@ const AdminPendaftaranPage = () => {
         <DetailModal item={selectedItem} onClose={() => setSelectedItem(null)} />
       )}
 
-      {/* Confirm Delete Dialog */}
+      {/* Confirm Delete Pendaftar Dialog */}
       <ConfirmDialog
         open={!!confirmState}
         title="Hapus Pendaftar?"
@@ -480,7 +702,139 @@ const AdminPendaftaranPage = () => {
         onCancel={() => setConfirmState(null)}
       />
 
+      {/* Confirm Delete Admin Dialog */}
+      <ConfirmDialog
+        open={!!confirmDeleteAdmin}
+        title="Hapus Admin?"
+        message={`Apakah Anda yakin ingin menghapus admin "${confirmDeleteAdmin?.username}"? Admin ini tidak akan bisa login lagi.`}
+        confirmText="Hapus"
+        cancelText="Batal"
+        tone="danger"
+        onConfirm={() =>
+          handleDeleteAdmin(confirmDeleteAdmin?.id, confirmDeleteAdmin?.username)
+        }
+        onCancel={() => setConfirmDeleteAdmin(null)}
+      />
+
+      {/* Create Admin Modal */}
+      {showCreateAdmin && (
+        <CreateAdminModal
+          newAdmin={newAdmin}
+          setNewAdmin={setNewAdmin}
+          onClose={() => {
+            setShowCreateAdmin(false);
+            setNewAdmin({ username: "", password: "", nama: "" });
+          }}
+          onSubmit={handleCreateAdmin}
+          loading={creatingAdmin}
+        />
+      )}
+
       <ToastStack toasts={toasts} onDismiss={dismissToast} />
+    </div>
+  );
+};
+
+/* ============================================================================
+ * CreateAdminModal - modal buat admin baru
+ * ========================================================================== */
+const CreateAdminModal = ({ newAdmin, setNewAdmin, onClose, onSubmit, loading }) => {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-xl">
+        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+          <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+            <UserCog className="w-5 h-5 text-indigo-600" />
+            Buat Admin Baru
+          </h3>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-900">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <form onSubmit={onSubmit} className="px-6 py-4 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nama Lengkap
+            </label>
+            <input
+              type="text"
+              className="input-field"
+              placeholder="Contoh: Budi Santoso"
+              value={newAdmin.nama}
+              onChange={(e) =>
+                setNewAdmin({ ...newAdmin, nama: e.target.value })
+              }
+              disabled={loading}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Username
+            </label>
+            <input
+              type="text"
+              className="input-field"
+              placeholder="Contoh: budi_admin"
+              value={newAdmin.username}
+              onChange={(e) =>
+                setNewAdmin({ ...newAdmin, username: e.target.value })
+              }
+              disabled={loading}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Password
+            </label>
+            <input
+              type="password"
+              className="input-field"
+              placeholder="Minimal 6 karakter"
+              value={newAdmin.password}
+              onChange={(e) =>
+                setNewAdmin({ ...newAdmin, password: e.target.value })
+              }
+              disabled={loading}
+              required
+              minLength={6}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Admin akan bisa login dengan username & password ini
+            </p>
+          </div>
+
+          <div className="flex gap-2 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="btn-secondary flex-1"
+              disabled={loading}
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              className="btn-primary flex-1 flex items-center justify-center"
+              disabled={loading}
+            >
+              {loading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  <UserCog className="w-4 h-4 mr-2" />
+                  Buat
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

@@ -74,6 +74,9 @@ import {
   updatePendaftaranDivisi, // Update divisi pendaftar (admin)
   deletePendaftaran, // Hapus pendaftar (admin)
   loginAdminPendaftaran, // Login admin dashboard pendaftaran
+  listAdminPendaftaran, // List admin (debug)
+  createAdminPendaftaran, // Buat admin baru
+  deleteAdminPendaftaran, // Hapus admin
 } from "./routes/pendaftaran.js";
 
 // Karena pakai ES modules, perlu manual define __dirname
@@ -211,6 +214,15 @@ app.delete("/api/pendaftaran/:id", deletePendaftaran);
 
 // POST /api/admin-pendaftaran/login - Login admin dashboard pendaftaran
 app.post("/api/admin-pendaftaran/login", loginAdminPendaftaran);
+
+// GET /api/admin-pendaftaran/list - List admin yang ada (debug, public)
+app.get("/api/admin-pendaftaran/list", listAdminPendaftaran);
+
+// POST /api/admin-pendaftaran/create - Buat admin baru (perlu secret atau token admin)
+app.post("/api/admin-pendaftaran/create", createAdminPendaftaran);
+
+// DELETE /api/admin-pendaftaran/:id - Hapus admin (admin only)
+app.delete("/api/admin-pendaftaran/:id", deleteAdminPendaftaran);
 
 /*
  * PROTECTED ROUTES - MAHASISWA/ANAK SMK
