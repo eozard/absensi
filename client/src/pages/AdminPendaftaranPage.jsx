@@ -1187,7 +1187,7 @@ const PendaftarCard = ({
                 className="btn-secondary text-sm py-1.5 flex items-center gap-1"
               >
                 <Edit3 className="w-3.5 h-3.5" />
-                Pilih Divisi
+                {isAssigned ? "Ganti Divisi" : "Pilih Divisi"}
               </button>
               <button
                 onClick={() => onView(item)}
