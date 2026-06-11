@@ -279,6 +279,98 @@ export const updatePendaftaranDivisi = async (req, res) => {
 
 /*
  * ============================================================================
+ * ENDPOINT: GET /api/pendaftaran/file/:id/:type
+ * ============================================================================
+ * Proxy endpoint untuk serve PDF file dengan header inline.
+ *
+ * Supabase Storage serve PDF dengan Content-Disposition: attachment
+ * secara default, yang bikin Edge/Firefox langsung download.
+ * Endpoint ini serve file dari storage tapi override header jadi inline
+ * supaya browser semua (Chrome, Edge, Firefox) preview di iframe.
+ *
+ * Params:
+ * - id:   id pendaftar
+ * - type: 'cv' | 'transkrip' | 'surat_persetujuan'
+ * ============================================================================
+ */
+export const getPendaftaranFile = async (req, res) => {
+  try {
+    const { id, type } = req.params;
+    const validTypes = ["cv", "transkrip", "surat_persetujuan"];
+    if (!validTypes.includes(type)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Tipe file tidak valid" });
+    }
+
+    const columnMap = {
+      cv: "cv_url",
+      transkrip: "transkrip_url",
+      surat_persetujuan: "surat_persetujuan_url",
+    };
+    const column = columnMap[type];
+
+    const { data, error } = await supabase
+      .from("pendaftaran")
+      .select(column)
+      .eq("id", id)
+      .single();
+
+    if (error || !data || !data[column]) {
+      return res
+        .status(404)
+        .json({ success: false, message: "File tidak ditemukan" });
+    }
+
+    const publicUrl = data[column];
+
+    // Extract path dari Supabase URL
+    // URL format: https://<project>.supabase.co/storage/v1/object/public/pendaftaran-files/<path>
+    const match = publicUrl.match(
+      /\/storage\/v1\/object\/public\/pendaftaran-files\/(.+?)(?:\?|$)/,
+    );
+    if (!match) {
+      return res
+        .status(500)
+        .json({ success: false, message: "URL file tidak valid" });
+    }
+    const filePath = match[1];
+
+    // Download file dari Supabase Storage (server-side)
+    const { data: fileData, error: downloadError } = await supabase.storage
+      .from("pendaftaran-files")
+      .download(filePath);
+
+    if (downloadError || !fileData) {
+      return res.status(500).json({
+        success: false,
+        message: "Gagal download file: " + (downloadError?.message || "unknown"),
+      });
+    }
+
+    // Convert Blob ke Buffer
+    const arrayBuffer = await fileData.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    // Set header inline supaya browser preview, bukan download
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", "inline");
+    res.setHeader("Content-Length", buffer.length);
+    // Disable cache supaya update file langsung kelihatan
+    res.setHeader("Cache-Control", "no-cache");
+
+    res.send(buffer);
+  } catch (error) {
+    console.error("Get file error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Terjadi kesalahan pada server",
+    });
+  }
+};
+
+/*
+ * ============================================================================
  * ENDPOINT: DELETE /api/pendaftaran/:id
  * ============================================================================
  * Hapus pendaftar berdasarkan id (admin only).

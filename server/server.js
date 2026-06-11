@@ -71,6 +71,7 @@ import {
 import {
   submitPendaftaran, // Submit pendaftaran PKL
   getPendaftaran, // List semua pendaftaran
+  getPendaftaranFile, // Proxy serve PDF dengan header inline
   updatePendaftaranDivisi, // Update divisi pendaftar (admin)
   deletePendaftaran, // Hapus pendaftar (admin)
   loginAdminPendaftaran, // Login admin dashboard pendaftaran
@@ -209,6 +210,9 @@ app.get("/api/pendaftaran", getPendaftaran);
 
 // PUT /api/pendaftaran/:id - Update divisi pendaftar (admin)
 app.put("/api/pendaftaran/:id", updatePendaftaranDivisi);
+
+// GET /api/pendaftaran/file/:id/:type - Proxy serve PDF dengan header inline
+app.get("/api/pendaftaran/file/:id/:type", getPendaftaranFile);
 
 // DELETE /api/pendaftaran/:id - Hapus pendaftar (admin)
 app.delete("/api/pendaftaran/:id", deletePendaftaran);

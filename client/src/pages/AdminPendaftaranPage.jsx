@@ -1215,15 +1215,25 @@ const PendaftarCard = ({
  * DetailModal - modal detail pendaftar + preview file
  * ========================================================================== */
 const DetailModal = ({ item, onClose }) => {
+  // Pakai proxy endpoint supaya PDF di-serve dengan Content-Disposition: inline
+  // (Supabase default attachment bikin Edge/Firefox langsung download)
+  const proxyUrl = (type) => `${API_URL}/pendaftaran/file/${item.id}/${type}`;
+
   const files = [
-    { label: "CV", url: item.cv_url, key: "cv" },
-    { label: "Transkrip Nilai", url: item.transkrip_url, key: "transkrip" },
+    { label: "CV", url: proxyUrl("cv"), originalUrl: item.cv_url, key: "cv" },
+    {
+      label: "Transkrip Nilai",
+      url: proxyUrl("transkrip"),
+      originalUrl: item.transkrip_url,
+      key: "transkrip",
+    },
     {
       label: "Surat Persetujuan",
-      url: item.surat_persetujuan_url,
+      url: proxyUrl("surat_persetujuan"),
+      originalUrl: item.surat_persetujuan_url,
       key: "surat",
     },
-  ].filter((f) => f.url);
+  ].filter((f) => f.originalUrl);
 
   const [activeTab, setActiveTab] = useState(files[0]?.key || "");
   const activeFile = files.find((f) => f.key === activeTab) || files[0];
@@ -1311,7 +1321,7 @@ const DetailModal = ({ item, onClose }) => {
                   {activeFile.label}
                 </span>
                 <a
-                  href={activeFile.url}
+                  href={activeFile.originalUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
