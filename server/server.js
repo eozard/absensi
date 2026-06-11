@@ -67,6 +67,15 @@ import {
   updateIzinStatus, // Approve/reject izin
 } from "./routes/admin.js";
 
+// Import handler untuk endpoint pendaftaran
+import {
+  submitPendaftaran, // Submit pendaftaran PKL
+  getPendaftaran, // List semua pendaftaran
+  updatePendaftaranDivisi, // Update divisi pendaftar (admin)
+  deletePendaftaran, // Hapus pendaftar (admin)
+  loginAdminPendaftaran, // Login admin dashboard pendaftaran
+} from "./routes/pendaftaran.js";
+
 // Karena pakai ES modules, perlu manual define __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -187,6 +196,21 @@ app.get("/api/check-ip", (req, res) => {
  */
 // POST /api/login - Login user (mahasiswa atau admin)
 app.post("/api/login", login);
+
+// POST /api/pendaftaran - Submit pendaftaran PKL (public, tanpa autentikasi)
+app.post("/api/pendaftaran", submitPendaftaran);
+
+// GET /api/pendaftaran - List semua pendaftaran (urutan paling awal → akhir)
+app.get("/api/pendaftaran", getPendaftaran);
+
+// PUT /api/pendaftaran/:id - Update divisi pendaftar (admin)
+app.put("/api/pendaftaran/:id", updatePendaftaranDivisi);
+
+// DELETE /api/pendaftaran/:id - Hapus pendaftar (admin)
+app.delete("/api/pendaftaran/:id", deletePendaftaran);
+
+// POST /api/admin-pendaftaran/login - Login admin dashboard pendaftaran
+app.post("/api/admin-pendaftaran/login", loginAdminPendaftaran);
 
 /*
  * PROTECTED ROUTES - MAHASISWA/ANAK SMK

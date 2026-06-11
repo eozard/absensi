@@ -1,0 +1,684 @@
+/*
+ * Admin Pendaftaran Dashboard
+ * - Login admin
+ * - List pendaftar (urutan paling awal → akhir)
+ * - Total count dengan split: priority (30 pertama) & excess (>30)
+ * - Admin bisa assign pendaftar ke divisi yang cocok
+ * - Admin bisa hapus pendaftar
+ */
+import React, { useState, useEffect } from "react";
+import {
+  LogOut,
+  Loader2,
+  Trash2,
+  Edit3,
+  UserPlus,
+  Download,
+  FileText,
+  CheckCircle,
+  Clock,
+  X,
+  Lock,
+  Mail,
+  User,
+  Hash,
+  Briefcase,
+  Users,
+  AlertCircle,
+  RefreshCw,
+} from "lucide-react";
+import axios from "axios";
+import ToastStack from "../components/Toast";
+import ConfirmDialog from "../components/ConfirmDialog";
+import { useToast } from "../hooks/useToast";
+
+const API_URL = import.meta.env.VITE_API_URL || "/api";
+
+const DIVISI_OPTIONS = [
+  "Networking",
+  "Software Engineer",
+  "Multimedia",
+  "Artificial Intelligence",
+  "Data Analyst",
+];
+
+const AdminPendaftaranPage = () => {
+  // Auth state
+  const [token, setToken] = useState(
+    () => localStorage.getItem("admin_pendaftaran_token") || null,
+  );
+  const [admin, setAdmin] = useState(() => {
+    try {
+      const raw = localStorage.getItem("admin_pendaftaran_user");
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  // Login form state
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [loginError, setLoginError] = useState("");
+
+  // Dashboard state
+  const [pendaftar, setPendaftar] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [editDivisi, setEditDivisi] = useState("");
+  const [confirmState, setConfirmState] = useState(null);
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  const { toasts, pushToast, dismissToast } = useToast();
+
+  const api = axios.create({
+    baseURL: API_URL,
+    headers: { "Content-Type": "application/json" },
+  });
+
+  api.interceptors.request.use((config) => {
+    if (token && !config.url.includes("/admin-pendaftaran/login")) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  });
+
+  api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      if (error.response?.status === 401 && !error.config.url.includes("/admin-pendaftaran/login")) {
+        handleLogout();
+      }
+      return Promise.reject(error);
+    },
+  );
+
+  const fetchPendaftar = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get("/pendaftaran");
+      if (res.data.success) {
+        setPendaftar(res.data.data);
+      }
+    } catch (err) {
+      const message =
+        err.response?.data?.message || "Gagal memuat data pendaftar";
+      pushToast({ type: "error", message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (token) {
+      fetchPendaftar();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoginError("");
+
+    if (!username || !password) {
+      setLoginError("Username dan password wajib diisi");
+      return;
+    }
+
+    setLoginLoading(true);
+    try {
+      const res = await axios.post(`${API_URL}/admin-pendaftaran/login`, {
+        username,
+        password,
+      });
+
+      if (res.data.success) {
+        localStorage.setItem(
+          "admin_pendaftaran_token",
+          res.data.token,
+        );
+        localStorage.setItem(
+          "admin_pendaftaran_user",
+          JSON.stringify(res.data.admin),
+        );
+        setToken(res.data.token);
+        setAdmin(res.data.admin);
+        setUsername("");
+        setPassword("");
+        pushToast({
+          type: "success",
+          message: `Selamat datang, ${res.data.admin.nama}!`,
+        });
+      }
+    } catch (err) {
+      const message =
+        err.response?.data?.message || "Login gagal";
+      setLoginError(message);
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("admin_pendaftaran_token");
+    localStorage.removeItem("admin_pendaftaran_user");
+    setToken(null);
+    setAdmin(null);
+    setPendaftar([]);
+  };
+
+  const handleEditDivisi = (item) => {
+    setEditingId(item.id);
+    setEditDivisi(item.assigned_divisi || item.divisi || "");
+  };
+
+  const handleSaveDivisi = async (id) => {
+    if (!editDivisi) {
+      pushToast({ type: "error", message: "Pilih divisi terlebih dahulu" });
+      return;
+    }
+
+    try {
+      const res = await api.put(`/pendaftaran/${id}`, {
+        assigned_divisi: editDivisi,
+        admin_nama: admin?.nama || "admin",
+      });
+
+      if (res.data.success) {
+        pushToast({ type: "success", message: "Divisi berhasil diupdate" });
+        setEditingId(null);
+        setEditDivisi("");
+        fetchPendaftar();
+      }
+    } catch (err) {
+      const message =
+        err.response?.data?.message || "Gagal update divisi";
+      pushToast({ type: "error", message });
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditDivisi("");
+  };
+
+  const handleDelete = (item) => {
+    setConfirmState({
+      id: item.id,
+      nama: item.nama,
+    });
+  };
+
+  const confirmDelete = async () => {
+    const id = confirmState?.id;
+    if (!id) return;
+
+    try {
+      const res = await api.delete(`/pendaftaran/${id}`);
+      if (res.data.success) {
+        pushToast({ type: "success", message: "Pendaftar berhasil dihapus" });
+        fetchPendaftar();
+      }
+    } catch (err) {
+      const message =
+        err.response?.data?.message || "Gagal menghapus pendaftar";
+      pushToast({ type: "error", message });
+    } finally {
+      setConfirmState(null);
+    }
+  };
+
+  // Split priority (30 paling awal) dan excess
+  const priority = pendaftar.slice(0, 30);
+  const excess = pendaftar.slice(30);
+  const totalPendaftar = pendaftar.length;
+
+  // ========== LOGIN VIEW ==========
+  if (!token) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-blue-100 px-4">
+        <div className="max-w-md w-full">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-600 rounded-full mb-4">
+              <Lock className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Admin Pendaftaran
+            </h1>
+            <p className="text-gray-600">Login untuk mengelola pendaftar PKL</p>
+          </div>
+
+          <div className="card">
+            {loginError && (
+              <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm mb-4 flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <span>{loginError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Username
+                </label>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="Masukkan username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  disabled={loginLoading}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  className="input-field"
+                  placeholder="Masukkan password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loginLoading}
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="btn-primary w-full flex items-center justify-center"
+                disabled={loginLoading}
+              >
+                {loginLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>
+                    <Lock className="w-5 h-5 mr-2" />
+                    Login
+                  </>
+                )}
+              </button>
+            </form>
+
+            <div className="mt-4 text-center">
+              <a
+                href="/pendaftaran"
+                className="text-sm text-indigo-600 hover:text-indigo-700"
+              >
+                ← Kembali ke halaman pendaftaran
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <ToastStack toasts={toasts} onDismiss={dismissToast} />
+      </div>
+    );
+  }
+
+  // ========== DASHBOARD VIEW ==========
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center">
+              <UserPlus className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-lg sm:text-xl font-bold text-gray-900">
+                Admin Pendaftaran PKL
+              </h1>
+              <p className="text-xs text-gray-500">
+                Halo, {admin?.nama || "Admin"}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={fetchPendaftar}
+              className="btn-secondary flex items-center gap-2 text-sm"
+              disabled={loading}
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
+            <button
+              onClick={handleLogout}
+              className="btn-danger flex items-center gap-2 text-sm"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="hidden sm:inline">Logout</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        {/* Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="card flex items-center gap-4">
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <Users className="w-6 h-6 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Total Pendaftar</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {totalPendaftar}
+              </p>
+            </div>
+          </div>
+          <div className="card flex items-center gap-4">
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <CheckCircle className="w-6 h-6 text-green-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Prioritas (30 Awal)</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {priority.length}
+              </p>
+            </div>
+          </div>
+          <div className="card flex items-center gap-4">
+            <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
+              <Clock className="w-6 h-6 text-amber-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">List Tambahan (&gt; 30)</p>
+              <p className="text-2xl font-bold text-gray-900">{excess.length}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Priority List */}
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+              <span className="inline-block w-2 h-6 bg-green-500 rounded" />
+              Daftar Prioritas ({priority.length} pendaftar pertama)
+            </h2>
+          </div>
+
+          {loading ? (
+            <div className="card flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+            </div>
+          ) : priority.length === 0 ? (
+            <div className="card text-center py-12 text-gray-500">
+              <Users className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+              <p>Belum ada pendaftar</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {priority.map((item, idx) => (
+                <PendaftarCard
+                  key={item.id}
+                  item={item}
+                  index={idx + 1}
+                  editingId={editingId}
+                  editDivisi={editDivisi}
+                  setEditDivisi={setEditDivisi}
+                  onEdit={handleEditDivisi}
+                  onSave={handleSaveDivisi}
+                  onCancelEdit={handleCancelEdit}
+                  onDelete={handleDelete}
+                  onView={setSelectedItem}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Excess List (only shown if total > 30) */}
+        {excess.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <span className="inline-block w-2 h-6 bg-amber-500 rounded" />
+                List Tambahan ({excess.length} pendaftar setelah 30 pertama)
+              </h2>
+            </div>
+
+            <div className="space-y-3">
+              {excess.map((item, idx) => (
+                <PendaftarCard
+                  key={item.id}
+                  item={item}
+                  index={idx + 31}
+                  editingId={editingId}
+                  editDivisi={editDivisi}
+                  setEditDivisi={setEditDivisi}
+                  onEdit={handleEditDivisi}
+                  onSave={handleSaveDivisi}
+                  onCancelEdit={handleCancelEdit}
+                  onDelete={handleDelete}
+                  onView={setSelectedItem}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+      </main>
+
+      {/* Detail Modal */}
+      {selectedItem && (
+        <DetailModal item={selectedItem} onClose={() => setSelectedItem(null)} />
+      )}
+
+      {/* Confirm Delete Dialog */}
+      <ConfirmDialog
+        open={!!confirmState}
+        title="Hapus Pendaftar?"
+        message={`Apakah Anda yakin ingin menghapus pendaftar "${confirmState?.nama}"? Data dan file PDF terkait akan dihapus permanen.`}
+        confirmText="Hapus"
+        cancelText="Batal"
+        tone="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => setConfirmState(null)}
+      />
+
+      <ToastStack toasts={toasts} onDismiss={dismissToast} />
+    </div>
+  );
+};
+
+/* ============================================================================
+ * PendaftarCard - kartu untuk satu pendaftar
+ * ========================================================================== */
+const PendaftarCard = ({
+  item,
+  index,
+  editingId,
+  editDivisi,
+  setEditDivisi,
+  onEdit,
+  onSave,
+  onCancelEdit,
+  onDelete,
+  onView,
+}) => {
+  const isEditing = editingId === item.id;
+  const isAssigned = !!item.assigned_divisi;
+
+  return (
+    <div
+      className={`card hover:shadow-lg transition ${
+        isAssigned ? "border-l-4 border-green-500" : "border-l-4 border-gray-200"
+      }`}
+    >
+      <div className="flex items-start gap-4">
+        <div className="flex-shrink-0 w-10 h-10 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center font-bold">
+          {index}
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div className="min-w-0">
+              <h3 className="font-bold text-gray-900 truncate">{item.nama}</h3>
+              <p className="text-sm text-gray-500">NIM: {item.nim}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              {isAssigned ? (
+                <span className="badge-green">Assigned: {item.assigned_divisi}</span>
+              ) : (
+                <span className="badge-yellow">Belum di-assign</span>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-2 flex flex-wrap gap-2 text-sm text-gray-600">
+            <span className="inline-flex items-center gap-1">
+              <Mail className="w-3.5 h-3.5" />
+              <a
+                href={`mailto:${item.email}`}
+                className="text-indigo-600 hover:underline truncate max-w-[200px]"
+              >
+                {item.email}
+              </a>
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <Briefcase className="w-3.5 h-3.5" />
+              Pilihan: {item.divisi}
+            </span>
+          </div>
+
+          {/* Edit divisi */}
+          {isEditing ? (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <select
+                value={editDivisi}
+                onChange={(e) => setEditDivisi(e.target.value)}
+                className="input-field flex-1 min-w-[180px] py-2"
+              >
+                <option value="">-- Pilih Divisi --</option>
+                {DIVISI_OPTIONS.map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </select>
+              <button onClick={() => onSave(item.id)} className="btn-primary text-sm py-2">
+                Simpan
+              </button>
+              <button onClick={onCancelEdit} className="btn-secondary text-sm py-2">
+                Batal
+              </button>
+            </div>
+          ) : (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => onEdit(item)}
+                className="btn-secondary text-sm py-1.5 flex items-center gap-1"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                {isAssigned ? "Ganti Divisi" : "Assign Divisi"}
+              </button>
+              <button
+                onClick={() => onView(item)}
+                className="btn-secondary text-sm py-1.5 flex items-center gap-1"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                Lihat Berkas
+              </button>
+              <button
+                onClick={() => onDelete(item)}
+                className="btn-danger text-sm py-1.5 flex items-center gap-1 ml-auto"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Hapus
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ============================================================================
+ * DetailModal - modal detail pendaftar + preview file
+ * ========================================================================== */
+const DetailModal = ({ item, onClose }) => {
+  const files = [
+    { label: "CV", url: item.cv_url },
+    { label: "Transkrip Nilai", url: item.transkrip_url },
+    { label: "Surat Persetujuan", url: item.surat_persetujuan_url },
+  ].filter((f) => f.url);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-xl max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+          <h3 className="text-lg font-bold text-gray-900">Detail Pendaftar</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-900"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="px-6 py-4 overflow-y-auto">
+          <div className="space-y-3">
+            <DetailRow icon={User} label="Nama" value={item.nama} />
+            <DetailRow icon={Hash} label="NIM" value={item.nim} />
+            <DetailRow icon={Mail} label="Email" value={item.email} />
+            <DetailRow
+              icon={Briefcase}
+              label="Divisi Pilihan"
+              value={item.divisi}
+            />
+            {item.assigned_divisi && (
+              <DetailRow
+                icon={CheckCircle}
+                label="Divisi Assigned"
+                value={`${item.assigned_divisi} (oleh ${item.assigned_by || "admin"})`}
+              />
+            )}
+          </div>
+
+          <h4 className="mt-6 mb-3 font-semibold text-gray-900 flex items-center gap-2">
+            <FileText className="w-4 h-4" />
+            Berkas PDF
+          </h4>
+          <div className="space-y-2">
+            {files.map((f) => (
+              <a
+                key={f.label}
+                href={f.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition"
+              >
+                <div className="flex items-center gap-3">
+                  <FileText className="w-5 h-5 text-red-500" />
+                  <span className="font-medium text-gray-700">{f.label}</span>
+                </div>
+                <Download className="w-4 h-4 text-gray-400" />
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const DetailRow = ({ icon: Icon, label, value }) => (
+  <div className="flex items-start gap-3">
+    <Icon className="w-4 h-4 text-gray-400 mt-1 flex-shrink-0" />
+    <div className="flex-1 min-w-0">
+      <p className="text-xs text-gray-500">{label}</p>
+      <p className="text-sm font-medium text-gray-900 break-words">{value}</p>
+    </div>
+  </div>
+);
+
+export default AdminPendaftaranPage;
