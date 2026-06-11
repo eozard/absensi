@@ -117,7 +117,7 @@ const AdminPendaftaranPage = () => {
   };
 
   // Dashboard state
-  const [activeTab, setActiveTab] = useState("pendaftar"); // 'pendaftar' | 'admins'
+  const [activeTab, setActiveTab] = useState("pendaftar"); // 'pendaftar' | 'admins' | 'divisi'
   const [pendaftar, setPendaftar] = useState([]);
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -244,6 +244,23 @@ const AdminPendaftaranPage = () => {
     if (!editDivisi) {
       pushToast({ type: "error", message: "Pilih divisi terlebih dahulu" });
       return;
+    }
+
+    // Cek limitasi 6 peserta per divisi (kecuali pendaftar yang sudah di divisi yang sama)
+    const MAX_PER_DIVISI = 6;
+    const currentItem = pendaftar.find((p) => p.id === id);
+    const movingToSameDivisi = currentItem?.assigned_divisi === editDivisi;
+    if (!movingToSameDivisi) {
+      const countInTarget = pendaftar.filter(
+        (p) => p.assigned_divisi === editDivisi,
+      ).length;
+      if (countInTarget >= MAX_PER_DIVISI) {
+        pushToast({
+          type: "error",
+          message: `Divisi ${editDivisi} sudah penuh (${MAX_PER_DIVISI}/${MAX_PER_DIVISI} peserta)`,
+        });
+        return;
+      }
     }
 
     try {
@@ -545,10 +562,10 @@ const AdminPendaftaranPage = () => {
 
         {/* Tabs */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex gap-1 border-b border-gray-200 -mb-px">
+          <div className="flex gap-1 border-b border-gray-200 -mb-px overflow-x-auto">
             <button
               onClick={() => setActiveTab("pendaftar")}
-              className={`px-4 py-2.5 text-sm font-medium flex items-center gap-2 border-b-2 transition ${
+              className={`px-4 py-2.5 text-sm font-medium flex items-center gap-2 border-b-2 transition whitespace-nowrap ${
                 activeTab === "pendaftar"
                   ? "border-indigo-600 text-indigo-600"
                   : "border-transparent text-gray-500 hover:text-gray-700"
@@ -558,8 +575,19 @@ const AdminPendaftaranPage = () => {
               Pendaftar
             </button>
             <button
+              onClick={() => setActiveTab("divisi")}
+              className={`px-4 py-2.5 text-sm font-medium flex items-center gap-2 border-b-2 transition whitespace-nowrap ${
+                activeTab === "divisi"
+                  ? "border-indigo-600 text-indigo-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <Briefcase className="w-4 h-4" />
+              Divisi
+            </button>
+            <button
               onClick={() => setActiveTab("admins")}
-              className={`px-4 py-2.5 text-sm font-medium flex items-center gap-2 border-b-2 transition ${
+              className={`px-4 py-2.5 text-sm font-medium flex items-center gap-2 border-b-2 transition whitespace-nowrap ${
                 activeTab === "admins"
                   ? "border-indigo-600 text-indigo-600"
                   : "border-transparent text-gray-500 hover:text-gray-700"
@@ -679,6 +707,15 @@ const AdminPendaftaranPage = () => {
           </section>
         )}
           </>
+        )}
+
+        {/* ========== TAB: DIVISI ========== */}
+        {activeTab === "divisi" && (
+          <DivisiTab
+            pendaftar={pendaftar}
+            onView={setSelectedItem}
+            maxPerDivisi={6}
+          />
         )}
 
         {/* ========== TAB: KELOLA ADMIN ========== */}
@@ -814,6 +851,146 @@ const AdminPendaftaranPage = () => {
 
       <ToastStack toasts={toasts} onDismiss={dismissToast} />
     </div>
+  );
+};
+
+/* ============================================================================
+ * DivisiTab - tampilkan peserta per divisi (max 6 per divisi)
+ * ========================================================================== */
+const DIVISI_COLORS = {
+  Networking: { bg: "bg-blue-50", text: "text-blue-700", bar: "bg-blue-500" },
+  "Software Engineer": { bg: "bg-purple-50", text: "text-purple-700", bar: "bg-purple-500" },
+  Multimedia: { bg: "bg-pink-50", text: "text-pink-700", bar: "bg-pink-500" },
+  "Artificial Intelligence": { bg: "bg-emerald-50", text: "text-emerald-700", bar: "bg-emerald-500" },
+  "Data Analyst": { bg: "bg-amber-50", text: "text-amber-700", bar: "bg-amber-500" },
+};
+
+const DivisiTab = ({ pendaftar, onView, maxPerDivisi = 6 }) => {
+  // Group pendaftar by assigned_divisi
+  const grouped = DIVISI_OPTIONS.reduce((acc, d) => {
+    acc[d] = pendaftar.filter((p) => p.assigned_divisi === d);
+    return acc;
+  }, {});
+
+  const totalAssigned = Object.values(grouped).reduce(
+    (sum, arr) => sum + arr.length,
+    0,
+  );
+  const unassigned = pendaftar.filter((p) => !p.assigned_divisi);
+
+  return (
+    <section className="space-y-6">
+      <div className="card bg-gradient-to-r from-indigo-50 to-blue-50 border-indigo-100">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+            <Briefcase className="w-6 h-6 text-indigo-600" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">
+              Distribusi Peserta per Divisi
+            </h2>
+            <p className="text-sm text-gray-600">
+              Maksimal {maxPerDivisi} peserta per divisi · Total assigned:{" "}
+              <span className="font-semibold">{totalAssigned}</span> /{" "}
+              {DIVISI_OPTIONS.length * maxPerDivisi}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {unassigned.length > 0 && (
+        <div className="card border-l-4 border-amber-400">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-bold text-gray-900">
+                {unassigned.length} peserta belum di-assign ke divisi
+              </h3>
+              <p className="text-sm text-gray-600">
+                Buka tab <strong>Pendaftar</strong> untuk assign mereka ke divisi.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {DIVISI_OPTIONS.map((divisi) => {
+          const members = grouped[divisi] || [];
+          const colors = DIVISI_COLORS[divisi];
+          const isFull = members.length >= maxPerDivisi;
+          const percent = Math.min(100, (members.length / maxPerDivisi) * 100);
+
+          return (
+            <div
+              key={divisi}
+              className={`card border-l-4 ${
+                isFull ? "border-red-500" : "border-gray-200"
+              }`}
+            >
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div>
+                  <h3 className="font-bold text-gray-900 text-base flex items-center gap-2">
+                    {divisi}
+                    {isFull && (
+                      <span className="badge-red text-xs">PENUH</span>
+                    )}
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    {members.length} / {maxPerDivisi} peserta
+                  </p>
+                </div>
+                <div
+                  className={`w-10 h-10 ${colors.bg} ${colors.text} rounded-lg flex items-center justify-center font-bold`}
+                >
+                  {members.length}
+                </div>
+              </div>
+
+              {/* Progress bar */}
+              <div className="w-full bg-gray-200 rounded-full h-2 mb-4 overflow-hidden">
+                <div
+                  className={`h-2 rounded-full transition-all ${
+                    isFull ? "bg-red-500" : colors.bar
+                  }`}
+                  style={{ width: `${percent}%` }}
+                />
+              </div>
+
+              {/* Members */}
+              {members.length === 0 ? (
+                <p className="text-sm text-gray-400 italic text-center py-4">
+                  Belum ada peserta
+                </p>
+              ) : (
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {members.map((p, idx) => (
+                    <button
+                      key={p.id}
+                      onClick={() => onView(p)}
+                      className="w-full flex items-center gap-2 p-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition text-left"
+                    >
+                      <span className="text-xs font-mono text-gray-400 w-6 flex-shrink-0">
+                        #{idx + 1}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {p.nama}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">
+                          NIM: {p.nim}
+                        </p>
+                      </div>
+                      <FileText className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 };
 
@@ -1039,10 +1216,17 @@ const PendaftarCard = ({
  * ========================================================================== */
 const DetailModal = ({ item, onClose }) => {
   const files = [
-    { label: "CV", url: item.cv_url },
-    { label: "Transkrip Nilai", url: item.transkrip_url },
-    { label: "Surat Persetujuan", url: item.surat_persetujuan_url },
+    { label: "CV", url: item.cv_url, key: "cv" },
+    { label: "Transkrip Nilai", url: item.transkrip_url, key: "transkrip" },
+    {
+      label: "Surat Persetujuan",
+      url: item.surat_persetujuan_url,
+      key: "surat",
+    },
   ].filter((f) => f.url);
+
+  const [activeTab, setActiveTab] = useState(files[0]?.key || "");
+  const activeFile = files.find((f) => f.key === activeTab) || files[0];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -1050,9 +1234,12 @@ const DetailModal = ({ item, onClose }) => {
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="relative w-full max-w-5xl bg-white rounded-2xl shadow-xl max-h-[95vh] overflow-hidden flex flex-col">
         <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-          <h3 className="text-lg font-bold text-gray-900">Detail Pendaftar</h3>
+          <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+            <User className="w-5 h-5 text-indigo-600" />
+            Detail Pendaftar
+          </h3>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-900"
@@ -1061,11 +1248,22 @@ const DetailModal = ({ item, onClose }) => {
           </button>
         </div>
 
-        <div className="px-6 py-4 overflow-y-auto">
-          <div className="space-y-3">
+        <div className="px-6 py-4 overflow-y-auto flex-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4 p-3 bg-gray-50 rounded-lg">
             <DetailRow icon={User} label="Nama" value={item.nama} />
             <DetailRow icon={Hash} label="NIM" value={item.nim} />
-            <DetailRow icon={Mail} label="Email" value={item.email} />
+            <DetailRow
+              icon={Mail}
+              label="Email"
+              value={
+                <a
+                  href={`mailto:${item.email}`}
+                  className="text-indigo-600 hover:underline"
+                >
+                  {item.email}
+                </a>
+              }
+            />
             <DetailRow
               icon={Briefcase}
               label="Divisi Pilihan"
@@ -1075,32 +1273,61 @@ const DetailModal = ({ item, onClose }) => {
               <DetailRow
                 icon={CheckCircle}
                 label="Divisi Assigned"
-                value={`${item.assigned_divisi} (oleh ${item.assigned_by || "admin"})`}
+                value={`${item.assigned_divisi} (oleh ${
+                  item.assigned_by || "admin"
+                })`}
               />
             )}
           </div>
 
-          <h4 className="mt-6 mb-3 font-semibold text-gray-900 flex items-center gap-2">
+          <h4 className="mb-3 font-semibold text-gray-900 flex items-center gap-2">
             <FileText className="w-4 h-4" />
-            Berkas PDF
+            Preview Berkas PDF
           </h4>
-          <div className="space-y-2">
+
+          {/* Tabs PDF */}
+          <div className="flex flex-wrap gap-1 mb-3 border-b border-gray-200">
             {files.map((f) => (
-              <a
-                key={f.label}
-                href={f.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition"
+              <button
+                key={f.key}
+                onClick={() => setActiveTab(f.key)}
+                className={`px-3 py-2 text-sm font-medium flex items-center gap-2 border-b-2 transition ${
+                  activeTab === f.key
+                    ? "border-indigo-600 text-indigo-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700"
+                }`}
               >
-                <div className="flex items-center gap-3">
-                  <FileText className="w-5 h-5 text-red-500" />
-                  <span className="font-medium text-gray-700">{f.label}</span>
-                </div>
-                <Download className="w-4 h-4 text-gray-400" />
-              </a>
+                <FileText className="w-3.5 h-3.5" />
+                {f.label}
+              </button>
             ))}
           </div>
+
+          {/* PDF Preview */}
+          {activeFile && (
+            <div className="border border-gray-200 rounded-lg overflow-hidden bg-gray-100">
+              <div className="flex items-center justify-between px-3 py-2 bg-white border-b border-gray-200">
+                <span className="text-sm font-medium text-gray-700">
+                  {activeFile.label}
+                </span>
+                <a
+                  href={activeFile.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  Download / Buka di tab baru
+                </a>
+              </div>
+              <iframe
+                src={activeFile.url}
+                title={activeFile.label}
+                className="w-full"
+                style={{ height: "60vh", border: "none" }}
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>
