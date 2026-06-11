@@ -468,6 +468,7 @@ export const absen = async (req, res) => {
     // STEP 4: Tentukan sesi berdasarkan waktu atau status absen pagi
     // Pagi: 08:00 - 10:00 (480 menit - 600 menit)
     // Sore: 15:00 - 17:00 (900 menit - 1020 menit)
+    // BYPASS_TIME_CHECK=true -> sesi otomatis: <12 = pagi, >=12 = sore (kapan saja)
     let sesi;
     const pagiStart = 8 * 60; // 08:00 = 480 menit
     const pagiEnd = 10 * 60; // 10:00 = 600 menit
@@ -475,8 +476,13 @@ export const absen = async (req, res) => {
     const soreEnd = 17 * 60; // 17:00 = 1020 menit
     // today harus berdasarkan timezone Jakarta agar validasi harian akurat.
 
-    // Validasi jam absensi (strict)
-    if (timeInMinutes >= pagiStart && timeInMinutes <= pagiEnd) {
+    const bypassTimeCheck = process.env.BYPASS_TIME_CHECK === "true";
+
+    if (bypassTimeCheck) {
+      // Mode bebas: sesi otomatis dari jam (sebelum jam 12 = pagi, setelah = sore)
+      sesi = timeInMinutes < 12 * 60 ? "pagi" : "sore";
+      console.log(`⏰ BYPASS_TIME_CHECK aktif, sesi otomatis: ${sesi}`);
+    } else if (timeInMinutes >= pagiStart && timeInMinutes <= pagiEnd) {
       sesi = "pagi";
     } else if (timeInMinutes >= soreStart && timeInMinutes <= soreEnd) {
       sesi = "sore";
@@ -491,7 +497,10 @@ export const absen = async (req, res) => {
 
     // STEP 5: Validasi khusus untuk absen sore
     // Harus sudah absen pagi + jeda minimal 6 jam (exclude istirahat)
+    // BYPASS_SORE_PAGI_CHECK=true -> absen sore tidak butuh absen pagi dulu
     if (sesi === "sore") {
+      const bypassSorePagiCheck = process.env.BYPASS_SORE_PAGI_CHECK === "true";
+
       // Cek apakah sudah absen pagi hari ini
       const { data: pagiAttendance, error: pagiError } = await supabase
         .from("attendances")
@@ -509,12 +518,16 @@ export const absen = async (req, res) => {
           .json({ success: false, message: "Database error" });
       }
 
-      // Tolak jika belum absen pagi
-      if (!pagiAttendance || pagiAttendance.length === 0) {
+      // Tolak jika belum absen pagi (kecuali bypass aktif)
+      if ((!pagiAttendance || pagiAttendance.length === 0) && !bypassSorePagiCheck) {
         return res.status(403).json({
           success: false,
           message: "Harus sudah absen pagi sebelum absen sore",
         });
+      }
+
+      if (bypassSorePagiCheck && (!pagiAttendance || pagiAttendance.length === 0)) {
+        console.log(`⏰ Sore-pagi rule bypassed (BYPASS_SORE_PAGI_CHECK=true)`);
       }
 
       const bypassJedaCheck = process.env.BYPASS_JEDA_CHECK === "true";

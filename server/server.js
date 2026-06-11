@@ -67,6 +67,14 @@ import {
   updateIzinStatus, // Approve/reject izin
 } from "./routes/admin.js";
 
+// Import handler untuk logbook (mahasiswa + admin)
+import logbookRouter, {
+  adminListLogbook,
+  adminLogbookStats,
+  adminGetLogbook,
+  adminReviewLogbook,
+} from "./routes/logbook.js";
+
 // Import handler untuk endpoint pendaftaran
 import {
   submitPendaftaran, // Submit pendaftaran PKL
@@ -259,6 +267,14 @@ app.get("/api/izin", verifyToken, isMahasiswa, getIzin);
 // DELETE /api/izin/:id - Batalkan permohonan izin (jika belum diapprove)
 app.delete("/api/izin/:id", verifyToken, isMahasiswa, cancelIzin);
 
+// LOGBOOK HARIAN - Mahasiswa/Anak SMK only
+// Mount router logbook. Router path-nya: /logbook/today, /logbook, dll.
+// Kita mount di /api dan filter: hanya handle request ke /api/logbook* (bukan /api/admin/*).
+app.use("/api", (req, res, next) => {
+  if (req.path.startsWith("/admin/")) return next();
+  return verifyToken(req, res, () => isMahasiswa(req, res, next));
+}, logbookRouter);
+
 /*
  * PROTECTED ROUTES - ADMIN ONLY
  * ─────────────────────────────────────────────────────────────────────────
@@ -322,6 +338,19 @@ app.get("/api/admin/izin", verifyToken, isAdmin, getAllIzin);
 
 // PUT /api/admin/izin/:id - Update status izin (approve/reject)
 app.put("/api/admin/izin/:id", verifyToken, isAdmin, updateIzinStatus);
+
+// LOGBOOK HARIAN - Admin only
+// GET /api/admin/logbook - List semua logbook (filter by nama/kelompok/tanggal/status)
+app.get("/api/admin/logbook", verifyToken, isAdmin, adminListLogbook);
+
+// GET /api/admin/logbook/stats - Statistik logbook (pending/today/etc)
+app.get("/api/admin/logbook/stats", verifyToken, isAdmin, adminLogbookStats);
+
+// GET /api/admin/logbook/:id - Detail 1 entry
+app.get("/api/admin/logbook/:id", verifyToken, isAdmin, adminGetLogbook);
+
+// PUT /api/admin/logbook/:id/review - Approve/reject + catatan
+app.put("/api/admin/logbook/:id/review", verifyToken, isAdmin, adminReviewLogbook);
 
 /*
  * SPA FALLBACK ROUTE

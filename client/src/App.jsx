@@ -9,6 +9,8 @@ import MahasiswaDashboard from "./pages/MahasiswaDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import PendaftaranPage from "./pages/PendaftaranPage";
 import AdminPendaftaranPage from "./pages/AdminPendaftaranPage";
+import LogbookPage from "./pages/LogbookPage";
+import AdminLogbookPage from "./pages/AdminLogbookPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -27,10 +29,26 @@ function App() {
           }
         />
         <Route
+          path="/logbook"
+          element={
+            <ProtectedRoute allowedRoles={["mahasiswa", "anak_smk"]}>
+              <LogbookPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/admin"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/logbook"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminLogbookPage />
             </ProtectedRoute>
           }
         />

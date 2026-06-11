@@ -15,6 +15,7 @@ import {
   Search,
   Trash2,
   Calendar,
+  BookOpen,
 } from "lucide-react";
 import axiosInstance from "../utils/axios";
 import ToastStack from "../components/Toast";
@@ -588,12 +589,20 @@ const AdminDashboard = () => {
               <h1 className="text-2xl font-bold">Admin Dashboard</h1>
               <p className="text-sm text-gray-600">Kelola sistem absensi PKL</p>
             </div>
-            <button
-              onClick={handleLogout}
-              className="btn-secondary flex items-center"
-            >
-              <LogOut className="w-4 h-4 mr-2" /> Logout
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => navigate("/admin/logbook")}
+                className="btn-secondary flex items-center"
+              >
+                <BookOpen className="w-4 h-4 mr-2" /> Review Logbook
+              </button>
+              <button
+                onClick={handleLogout}
+                className="btn-secondary flex items-center"
+              >
+                <LogOut className="w-4 h-4 mr-2" /> Logout
+              </button>
+            </div>
           </div>
         </div>
       </div>

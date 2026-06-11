@@ -11,6 +11,7 @@ import {
   AlertCircle,
   Loader2,
   FileText,
+  BookOpen,
   X,
 } from "lucide-react";
 import axiosInstance from "../utils/axios";
@@ -27,6 +28,11 @@ const MahasiswaDashboard = () => {
   const [timeRemaining, setTimeRemaining] = useState(10 * 60);
   const [canAbsenPagi, setCanAbsenPagi] = useState(false);
   const [canAbsenSore, setCanAbsenSore] = useState(false);
+  // Bypass flags dari Vite env (di-bake saat build time)
+  // VITE_BYPASS_TIME_CHECK=true -> tombol pagi+sore selalu bisa diklik
+  // VITE_BYPASS_PAGI_ONLY=true   -> hanya tombol pagi yang bisa diklik
+  const bypassMode = import.meta.env.VITE_BYPASS_TIME_CHECK === "true";
+  const bypassPagiOnly = import.meta.env.VITE_BYPASS_PAGI_ONLY === "true";
   // State modal dan data izin
   const [showIzinModal, setShowIzinModal] = useState(false);
   const [izinData, setIzinData] = useState({
@@ -79,9 +85,22 @@ const MahasiswaDashboard = () => {
       const soreStart = 15 * 60;
       const soreEnd = 17 * 60;
 
-      // Validasi jam ketat untuk absensi
-      setCanAbsenPagi(timeInMinutes >= pagiStart && timeInMinutes <= pagiEnd);
-      setCanAbsenSore(timeInMinutes >= soreStart && timeInMinutes <= soreEnd);
+      // Validasi jam ketat untuk absensi (override via Vite env)
+      if (bypassPagiOnly) {
+        // Mode bypass pagi-only: hanya tombol pagi yang aktif
+        setCanAbsenPagi(true);
+        setCanAbsenSore(false);
+        console.log("🔄 Frontend bypass mode ON - pagi only");
+      } else if (bypassMode) {
+        // Mode bypass penuh: kedua tombol aktif
+        setCanAbsenPagi(true);
+        setCanAbsenSore(true);
+        console.log("🔄 Frontend bypass mode ON - pagi & sore");
+      } else {
+        // Mode normal: validasi jam ketat
+        setCanAbsenPagi(timeInMinutes >= pagiStart && timeInMinutes <= pagiEnd);
+        setCanAbsenSore(timeInMinutes >= soreStart && timeInMinutes <= soreEnd);
+      }
 
       // Calculate time remaining (10 min window)
       const nextHour = hours + 1;
@@ -311,12 +330,20 @@ const MahasiswaDashboard = () => {
                 <span className="font-semibold">{user?.nama}</span>
               </p>
             </div>
-            <button
-              onClick={handleLogout}
-              className="btn-secondary flex items-center"
-            >
-              <LogOut className="w-4 h-4 mr-2" /> Logout
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => navigate("/logbook")}
+                className="btn-primary flex items-center"
+              >
+                <BookOpen className="w-4 h-4 mr-2" /> Logbook
+              </button>
+              <button
+                onClick={handleLogout}
+                className="btn-secondary flex items-center"
+              >
+                <LogOut className="w-4 h-4 mr-2" /> Logout
+              </button>
+            </div>
           </div>
         </div>
       </div>
