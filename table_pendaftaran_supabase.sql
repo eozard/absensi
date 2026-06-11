@@ -71,13 +71,14 @@ CREATE TABLE IF NOT EXISTS admin_pendaftaran (
 );
 
 -- Akun admin default (username: admin, password: admin123)
--- Password di-hash menggunakan bcrypt.
+-- Password di-hash menggunakan bcryptjs (Node.js).
 -- Hash di bawah ini untuk password "admin123":
---   $2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy
--- Silakan generate hash baru jika ingin password lain.
+--   $2b$10$yJaDEXjw5Duh9hwmzU62PuEYfF1LihUEvGTfxuxuoMG11gasJinn.
+-- Jika ingin ganti password, generate hash baru dengan:
+--   node -e "console.log(require('bcryptjs').hashSync('PASSWORD_BARU', 10))"
 INSERT INTO admin_pendaftaran (username, password, nama)
-VALUES ('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'Admin Pendaftaran')
-ON CONFLICT (username) DO NOTHING;
+VALUES ('admin', '$2b$10$yJaDEXjw5Duh9hwmzU62PuEYfF1LihUEvGTfxuxuoMG11gasJinn.', 'Admin Pendaftaran')
+ON CONFLICT (username) DO UPDATE SET password = EXCLUDED.password;
 
 -- RLS untuk admin_pendaftaran
 ALTER TABLE admin_pendaftaran ENABLE ROW LEVEL SECURITY;
