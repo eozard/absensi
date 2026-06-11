@@ -89,24 +89,9 @@ const PendaftaranPage = () => {
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
               Pendaftaran Berhasil!
             </h2>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600">
               Data pendaftaran kamu telah berhasil dikirim. Silakan tunggu informasi selanjutnya.
             </p>
-            <button
-              onClick={() => {
-                setSuccess(false);
-                setNama("");
-                setNim("");
-                setDivisi("");
-                setEmail("");
-                setCv(null);
-                setTranskrip(null);
-                setSuratPersetujuan(null);
-              }}
-              className="btn-primary"
-            >
-              Daftar Lagi
-            </button>
           </div>
         </div>
       </div>
