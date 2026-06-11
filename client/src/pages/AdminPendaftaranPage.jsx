@@ -64,6 +64,57 @@ const AdminPendaftaranPage = () => {
   const [password, setPassword] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState("");
+  const [seeding, setSeeding] = useState(false);
+  const [adminCount, setAdminCount] = useState(null);
+  const [showSeedButton, setShowSeedButton] = useState(false);
+
+  // Cek apakah ada admin saat halaman login muncul
+  useEffect(() => {
+    if (token) return;
+    const checkAdmin = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/admin-pendaftaran/list`);
+        if (res.data.success) {
+          setAdminCount(res.data.total);
+          if (res.data.total === 0) {
+            setShowSeedButton(true);
+          }
+        }
+      } catch {
+        // silent
+      }
+    };
+    checkAdmin();
+  }, [token]);
+
+  const handleSeedAdmin = async () => {
+    setSeeding(true);
+    setLoginError("");
+    try {
+      const res = await axios.post(`${API_URL}/admin-pendaftaran/seed`);
+      if (res.data.success) {
+        if (res.data.seeded) {
+          pushToast({
+            type: "success",
+            message: `Admin default berhasil dibuat! Login: admin / admin123`,
+          });
+          setShowSeedButton(false);
+          setAdminCount(1);
+        } else {
+          pushToast({
+            type: "info",
+            message: res.data.message,
+          });
+        }
+      }
+    } catch (err) {
+      const message =
+        err.response?.data?.message || "Gagal membuat admin default";
+      setLoginError(message);
+    } finally {
+      setSeeding(false);
+    }
+  };
 
   // Dashboard state
   const [activeTab, setActiveTab] = useState("pendaftar"); // 'pendaftar' | 'admins'
@@ -401,13 +452,44 @@ const AdminPendaftaranPage = () => {
               </button>
             </form>
 
-            <div className="mt-4 text-center">
+            <div className="mt-4 text-center space-y-2">
               <a
                 href="/pendaftaran"
-                className="text-sm text-indigo-600 hover:text-indigo-700"
+                className="text-sm text-indigo-600 hover:text-indigo-700 block"
               >
                 ← Kembali ke halaman pendaftaran
               </a>
+
+              {showSeedButton && (
+                <div className="pt-3 border-t border-gray-200">
+                  <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3 mb-2">
+                    ⚠️ Belum ada akun admin di database.
+                    <br />
+                    Klik tombol di bawah untuk membuat admin default.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleSeedAdmin}
+                    disabled={seeding}
+                    className="btn-primary w-full text-sm flex items-center justify-center"
+                  >
+                    {seeding ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <UserCog className="w-4 h-4 mr-2" />
+                        Setup Admin Default (admin/admin123)
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+
+              {adminCount !== null && adminCount > 0 && (
+                <p className="text-xs text-gray-400">
+                  {adminCount} akun admin terdaftar
+                </p>
+              )}
             </div>
           </div>
         </div>

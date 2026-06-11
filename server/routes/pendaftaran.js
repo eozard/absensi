@@ -463,6 +463,96 @@ export const listAdminPendaftaran = async (req, res) => {
 
 /*
  * ============================================================================
+ * ENDPOINT: POST /api/admin-pendaftaran/seed
+ * ============================================================================
+ * One-time setup endpoint: buat akun admin default kalau belum ada.
+ *
+ * AMAN: idempotent. Hanya insert kalau belum ada admin sama sekali.
+ * Bisa dipanggil publik (untuk setup awal) tapi tidak akan insert kalau
+ * sudah ada admin. Lindungi dengan ADMIN_SETUP_SECRET kalau mau.
+ *
+ * Gunakan kalau:
+ * - Lupa setup admin default
+ * - Ingin reset ke admin/admin123 (hapus dulu via SQL jika perlu)
+ * ============================================================================
+ */
+export const seedAdminPendaftaran = async (req, res) => {
+  try {
+    // Cek secret kalau ada di env
+    const setupSecret = process.env.ADMIN_SETUP_SECRET;
+    const headerSecret = req.headers["x-setup-secret"];
+    if (setupSecret && headerSecret !== setupSecret) {
+      return res.status(403).json({
+        success: false,
+        message: "Secret tidak valid. Set header x-setup-secret.",
+      });
+    }
+
+    // Cek apakah sudah ada admin
+    const { data: existing, error: checkError } = await supabase
+      .from("admin_pendaftaran")
+      .select("id, username")
+      .limit(1);
+
+    if (checkError) {
+      return res.status(500).json({
+        success: false,
+        message: "Gagal cek admin: " + checkError.message,
+      });
+    }
+
+    if (existing && existing.length > 0) {
+      return res.status(200).json({
+        success: true,
+        message: `Admin sudah ada (${existing.length} akun). Tidak insert baru.`,
+        seeded: false,
+        existing: existing,
+      });
+    }
+
+    // Hash default password
+    const defaultPassword = "admin123";
+    const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+
+    const { data, error } = await supabase
+      .from("admin_pendaftaran")
+      .insert([
+        {
+          username: "admin",
+          password: hashedPassword,
+          nama: "Admin Pendaftaran",
+        },
+      ])
+      .select("id, username, nama");
+
+    if (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Gagal seed admin: " + error.message,
+      });
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: `Admin default berhasil dibuat! Login dengan username: 'admin', password: '${defaultPassword}'`,
+      seeded: true,
+      credentials: {
+        username: "admin",
+        password: defaultPassword,
+      },
+      data: data[0],
+    });
+  } catch (error) {
+    console.error("Seed admin error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Terjadi kesalahan pada server",
+    });
+  }
+};
+
+/*
+ * ============================================================================
  * ENDPOINT: POST /api/admin-pendaftaran/create
  * ============================================================================
  * Buat akun admin baru.

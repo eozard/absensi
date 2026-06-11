@@ -77,6 +77,7 @@ import {
   listAdminPendaftaran, // List admin (debug)
   createAdminPendaftaran, // Buat admin baru
   deleteAdminPendaftaran, // Hapus admin
+  seedAdminPendaftaran, // Seed admin default (idempotent)
 } from "./routes/pendaftaran.js";
 
 // Karena pakai ES modules, perlu manual define __dirname
@@ -217,6 +218,9 @@ app.post("/api/admin-pendaftaran/login", loginAdminPendaftaran);
 
 // GET /api/admin-pendaftaran/list - List admin yang ada (debug, public)
 app.get("/api/admin-pendaftaran/list", listAdminPendaftaran);
+
+// POST /api/admin-pendaftaran/seed - Seed admin default (idempotent, public/secret)
+app.post("/api/admin-pendaftaran/seed", seedAdminPendaftaran);
 
 // POST /api/admin-pendaftaran/create - Buat admin baru (perlu secret atau token admin)
 app.post("/api/admin-pendaftaran/create", createAdminPendaftaran);
